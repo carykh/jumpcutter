@@ -4,32 +4,38 @@ title Installing dependencies...
 :pysearch
 :: Search for specific Python command.
 python --version >> nul
-if %errorlevel%==0 (
-set command="python"
-goto pip
-)
+if %errorlevel%==0 goto pippython
 
 py --version >> nul
-if %errorlevel%==0 (
-set command="py"
-goto pip
-)
+if %errorlevel%==0 goto pippy
 
 ::We didn't found the Python executable! Ask the user for the path to the .exe file.
 echo !!PYTHON NOT FOUND.!!
 set/p path="Path to Python:"
 cd path
 goto pysearch
-:pip
+:pippy
 ::Install the required modules.
 echo Installing Pillow.
-start %command% -m pip install pillow
+call py -m pip install pillow
 echo Installing AudioTSM.
-start %command% -m pip install audiotsm
+call py -m pip install audiotsm
 echo Installing SciPy.
-start %command% -m pip install scipy
+call py -m pip install scipy
 echo Installing NumPy.
-start %command% -m pip install numpy
+call py -m pip install numpy
+
+
+:pippython
+::Install the required modules.
+echo Installing Pillow.
+call python -m pip install pillow
+echo Installing AudioTSM.
+call python -m pip install audiotsm
+echo Installing SciPy.
+call python -m pip install scipy
+echo Installing NumPy.
+call python -m pip install numpy
 
 :: We've completed the task.
 :: Ask for user input and terminate the script.
