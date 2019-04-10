@@ -1,0 +1,4 @@
+Pillow
+audiotsm
+scipy
+numpy
