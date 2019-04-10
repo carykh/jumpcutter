@@ -15,4 +15,6 @@ I have processed 17-minute videos completely fine, but be wary if you're gonna g
 
 I want to use pyinstaller to turn this into an executable, so non-techy people
 can use it EVEN IF they don't have Python and all those libraries. Jabrils 
-recommended this to me. However, my pyinstaller build did not work. :( HELP
+recommended this to me.
+
+Here is a direct link to windows release: [jumpcutter.exe](https://github.com/kranercc/jumpcutter/releases/download/windows/jumpcutter.exe)
