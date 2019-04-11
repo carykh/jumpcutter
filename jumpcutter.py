@@ -11,11 +11,13 @@ from pytube import YouTube
 from scipy.io import wavfile
 from shutil import copyfile, rmtree
 
+
 def downloadFile(url):
     name = YouTube(url).streams.first().download()
     newname = name.replace(' ','_')
     os.rename(name,newname)
     return newname
+
 
 def getMaxVolume(s):
     maxv = float(np.max(s))
@@ -61,6 +63,7 @@ def deletePath(s):  # Dangerous! Watch out!
         print("Deletion of the directory %s failed" % s)
         print(OSError)
 
+
 parser = argparse.ArgumentParser(
     description='Modifies a video file to play at different speeds when there is sound vs. silence.')
 parser.add_argument('-i', '--input_file', type=str, help='the video file you want modified')
@@ -104,6 +107,9 @@ else:
 URL = args.url
 FRAME_QUALITY = args.frame_quality
 TEMP_FOLDER = args.temp_folder
+
+# smooth out transitiion's audio by quickly fading in/out (arbitrary magic number whatever)
+AUDIO_FADE_ENVELOPE_SIZE = 400
 
 assert INPUT_FILE is not None, "why u put no input file, that dum"
 
