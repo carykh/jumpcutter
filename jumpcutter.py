@@ -77,13 +77,13 @@ AUDIO_FADE_ENVELOPE_SIZE = 400 # smooth out transitiion's audio by quickly fadin
 
 createPath(TEMP_FOLDER)
 
-command = 'ffmpeg -i "{}" -qscale:v {} "{}/frame%06d.jpg" -hide_banner'.format(INPUT_FILE, FRAME_QUALITY, TEMP_FOLDER)
+command = f'ffmpeg -i "{INPUT_FILE}" -qscale:v {FRAME_QUALITY} "{TEMP_FOLDER}/frame%06d.jpg" -hide_banner'
 subprocess.call(command, shell=True)
 
-command = 'ffmpeg -i "{}" -ab 160k -ac 2 -ar {} -vn "{}/audio.wav"'.format(INPUT_FILE, SAMPLE_RATE, TEMP_FOLDER)
+command = f'ffmpeg -i "{INPUT_FILE}" -ab 160k -ac 2 -ar {SAMPLE_RATE} -vn "{TEMP_FOLDER}/audio.wav"'
 subprocess.call(command, shell=True)
 
-command = "ffmpeg -i "+TEMP_FOLDER+"/input.mp4 2>&1"
+command = f'ffmpeg -i "{TEMP_FOLDER}/input.mp4" 2>&1'
 f = open(TEMP_FOLDER+"/params.txt", "w")
 subprocess.call(command, shell=True, stdout=f)
 
@@ -181,7 +181,7 @@ for endGap in range(outputFrame,audioFrameCount):
     copyFrame(int(audioSampleCount/samplesPerFrame)-1,endGap)
 '''
 
-command = 'ffmpeg -framerate {} -i "{f}/newFrame%06d.jpg" -i "{f}/audioNew.wav" -strict -2 {}'.format(frameRate, OUTPUT_FILE, f=TEMP_FOLDER)
+command = f'ffmpeg -framerate {frameRate} -i "{TEMP_FOLDER}/newFrame%06d.jpg" -i "{TEMP_FOLDER}/audioNew.wav" -strict -2 "{OUTPUT_FILE}"'
 subprocess.call(command, shell=True)
 
 deletePath(TEMP_FOLDER)
