@@ -33,15 +33,15 @@ def inputToOutputFilename(filename):
 def createPath(s):
     #assert (not os.path.exists(s)), "The filepath "+s+" already exists. Don't want to overwrite it. Aborting."
 
-    try:  
+    try:
         os.mkdir(s)
-    except OSError:  
+    except OSError:
         assert False, "Creation of the directory %s failed. (The TEMP folder may already exist. Delete or rename it, and try again.)"
 
 def deletePath(s): # Dangerous! Watch out!
-    try:  
+    try:
         rmtree(s,ignore_errors=False)
-    except OSError:  
+    except OSError:
         print ("Deletion of the directory %s failed" % s)
         print(OSError)
 
@@ -67,21 +67,20 @@ INPUT_FILE = args.input_file
 FRAME_QUALITY = args.frame_quality
 
 assert INPUT_FILE != None, "why u put no input file, that dum"
-    
+
 OUTPUT_FILE = inputToOutputFilename(INPUT_FILE)
 if len(args.output_file) >= 1:
     OUTPUT_FILE = args.output_file
 
 TEMP_FOLDER = "TEMP"
 AUDIO_FADE_ENVELOPE_SIZE = 400 # smooth out transitiion's audio by quickly fading in/out (arbitrary magic number whatever)
-    
+
 createPath(TEMP_FOLDER)
 
-command = "ffmpeg -i "+INPUT_FILE+" -qscale:v "+str(FRAME_QUALITY)+" "+TEMP_FOLDER+"/frame%06d.jpg -hide_banner"
+command = 'ffmpeg -i "{}" -qscale:v {} "{}/frame%06d.jpg" -hide_banner'.format(INPUT_FILE, FRAME_QUALITY, TEMP_FOLDER)
 subprocess.call(command, shell=True)
 
-command = "ffmpeg -i "+INPUT_FILE+" -ab 160k -ac 2 -ar "+str(SAMPLE_RATE)+" -vn "+TEMP_FOLDER+"/audio.wav"
-
+command = 'ffmpeg -i "{}" -ab 160k -ac 2 -ar {} -vn "{}/audio.wav"'.format(INPUT_FILE, SAMPLE_RATE, TEMP_FOLDER)
 subprocess.call(command, shell=True)
 
 command = "ffmpeg -i "+TEMP_FOLDER+"/input.mp4 2>&1"
@@ -137,7 +136,7 @@ outputPointer = 0
 lastExistingFrame = None
 for chunk in chunks:
     audioChunk = audioData[int(chunk[0]*samplesPerFrame):int(chunk[1]*samplesPerFrame)]
-    
+
     sFile = TEMP_FOLDER+"/tempStart.wav"
     eFile = TEMP_FOLDER+"/tempEnd.wav"
     wavfile.write(sFile,SAMPLE_RATE,audioChunk)
@@ -153,7 +152,7 @@ for chunk in chunks:
     #outputAudioData[outputPointer:endPointer] = alteredAudioData/maxAudioVolume
 
     # smooth out transitiion's audio by quickly fading in/out
-    
+
     if leng < AUDIO_FADE_ENVELOPE_SIZE:
         outputAudioData[outputPointer:endPointer] = 0 # audio is less than 0.01 sec, let's just remove it.
     else:
@@ -182,7 +181,7 @@ for endGap in range(outputFrame,audioFrameCount):
     copyFrame(int(audioSampleCount/samplesPerFrame)-1,endGap)
 '''
 
-command = "ffmpeg -framerate "+str(frameRate)+" -i "+TEMP_FOLDER+"/newFrame%06d.jpg -i "+TEMP_FOLDER+"/audioNew.wav -strict -2 "+OUTPUT_FILE
+command = 'ffmpeg -framerate {} -i "{f}/newFrame%06d.jpg" -i "{f}/audioNew.wav" -strict -2 {}'.format(frameRate, OUTPUT_FILE, f=TEMP_FOLDER)
 subprocess.call(command, shell=True)
 
 deletePath(TEMP_FOLDER)
