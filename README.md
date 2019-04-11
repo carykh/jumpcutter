@@ -4,7 +4,7 @@ Automatically edits videos. Explanation here: https://www.youtube.com/watch?v=DQ
 ## Installing & Running
 
 ### Arch Linux
-Use your favorite AUR helper and install the `jumpcutter-git` package.
+Use your favorite AUR helper and install the [`jumpcutter-git`](https://aur.archlinux.org/packages/jumpcutter-git/) package.
 
 For example, Using yay: `yay jumpcutter-git`
 Then you can use the binary located in /usr/bin/jumpcutter
