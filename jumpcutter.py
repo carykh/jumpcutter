@@ -81,8 +81,8 @@ URL = args.url
 FRAME_QUALITY = args.frame_quality
 
 assert INPUT_FILE != None , "why u put no input file, that dum"
-assert FRAME_QUALITY < 31 , "The max value for frame quality is 31."
-assert FRAME_QUALITY > 1 , "The min value for frame quality is 1."
+assert FRAME_QUALITY < 32 , "The max value for frame quality is 31."
+assert FRAME_QUALITY > 0 , "The min value for frame quality is 1."
     
 if len(args.output_file) >= 1:
     OUTPUT_FILE = args.output_file
