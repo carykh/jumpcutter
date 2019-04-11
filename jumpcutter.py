@@ -7,9 +7,15 @@ import subprocess
 
 from audiotsm import phasevocoder
 from audiotsm.io.wav import WavReader, WavWriter
+from pytube import YouTube
 from scipy.io import wavfile
 from shutil import copyfile, rmtree
 
+def downloadFile(url):
+    name = YouTube(url).streams.first().download()
+    newname = name.replace(' ','_')
+    os.rename(name,newname)
+    return newname
 
 def getMaxVolume(s):
     maxv = float(np.max(s))
@@ -55,10 +61,10 @@ def deletePath(s):  # Dangerous! Watch out!
         print("Deletion of the directory %s failed" % s)
         print(OSError)
 
-
 parser = argparse.ArgumentParser(
     description='Modifies a video file to play at different speeds when there is sound vs. silence.')
 parser.add_argument('-i', '--input_file', type=str, help='the video file you want modified')
+parser.add_argument('-u', '--url', type=str, help='A youtube url to download and process')
 parser.add_argument('-o', '--output_file', type=str, default="",
                     help="the output file. (optional. if not included, it'll just modify the input file name)")
 parser.add_argument('-t', '--silent_threshold', type=float, default=0.03,
@@ -91,15 +97,17 @@ SILENT_THRESHOLD = args.silent_threshold
 FRAME_SPREADAGE = args.frame_margin
 NEW_SPEED = [silent_speed, args.sounded_speed]
 INPUT_FILE = args.input_file
+if args.url != None:
+    INPUT_FILE = downloadFile(args.url)
+else:
+    INPUT_FILE = args.input_file
+URL = args.url
 FRAME_QUALITY = args.frame_quality
 TEMP_FOLDER = args.temp_folder
 
 assert INPUT_FILE is not None, "why u put no input file, that dum"
 
 OUTPUT_FILE = args.output_file if len(args.output_file) >= 1 else inputToOutputFilename(INPUT_FILE)
-
-# smooth out transition's audio by quickly fading in/out (arbitrary magic number whatever)
-AUDIO_FADE_ENVELOPE_SIZE = 400
 
 createPath(TEMP_FOLDER)
 
