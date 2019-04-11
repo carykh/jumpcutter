@@ -10,9 +10,10 @@ import math
 from shutil import copyfile, rmtree
 import os
 import argparse
-from pytube import YouTube
 
 def downloadFile(url):
+    from pytube import YouTube #require pytube only if using youtube url
+
     name = YouTube(url).streams.first().download()
     newname = name.replace(' ','_')
     os.rename(name,newname)
