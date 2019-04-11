@@ -39,16 +39,28 @@ def inputToOutputFilename(filename):
 
 def createPath(s):
     #assert (not os.path.exists(s)), "The filepath "+s+" already exists. Don't want to overwrite it. Aborting."
+    if os.path.exists(s):
+        if os.path.isfile(s):
+            raise Exception("Directory \"" + s + "\" could not be created, because there is a file with the same name.")
+        else:
+            if not os.listdir(s):
+                # directory exists and is empty -> return
+            	return
+            else:
+                # directory exists and is not empty
+                raise Exception("Directory \"" + s + "\" allready exists and is not empty.")
 
-    try:  
+
+    # try to create directory
+    try:
         os.mkdir(s)
-    except OSError:  
-        assert False, "Creation of the directory %s failed. (The TEMP folder may already exist. Delete or rename it, and try again.)"
+    except OSError:
+        assert False, "Creation of the directory \"%s\" failed. (The TEMP folder may already exist. Delete or rename it, and try again.)"
 
 def deletePath(s): # Dangerous! Watch out!
-    try:  
+    try:
         rmtree(s,ignore_errors=False)
-    except OSError:  
+    except OSError:
         print ("Deletion of the directory %s failed" % s)
         print(OSError)
 
@@ -63,6 +75,7 @@ parser.add_argument('--frame_margin', type=float, default=1, help="some silent f
 parser.add_argument('--sample_rate', type=float, default=44100, help="sample rate of the input and output videos")
 parser.add_argument('--frame_rate', type=float, default=30, help="frame rate of the input and output videos. optional... I try to find it out myself, but it doesn't always work.")
 parser.add_argument('--frame_quality', type=int, default=3, help="quality of frames to be extracted from input video. 1 is highest, 31 is lowest, 3 is the default.")
+parser.add_argument('--tempdir', type=str, default="TEMP", help="where to store the temp-data. Foolder nneds to be empty. default is TEMP")
 
 args = parser.parse_args()
 
@@ -73,6 +86,8 @@ SAMPLE_RATE = args.sample_rate
 SILENT_THRESHOLD = args.silent_threshold
 FRAME_SPREADAGE = args.frame_margin
 NEW_SPEED = [args.silent_speed, args.sounded_speed]
+# ffmpeg loglevel: quiet, panic, fatal, error, warning, info, verbose, debug, trace 
+FFMPEGCMD = "ffmpeg -hide_banner -loglevel warning " # add -y to auto override existing files
 if args.url != None:
     INPUT_FILE = downloadFile(args.url)
 else:
@@ -81,25 +96,25 @@ URL = args.url
 FRAME_QUALITY = args.frame_quality
 
 assert INPUT_FILE != None , "why u put no input file, that dum"
-    
+
 if len(args.output_file) >= 1:
     OUTPUT_FILE = args.output_file
 else:
     OUTPUT_FILE = inputToOutputFilename(INPUT_FILE)
 
-TEMP_FOLDER = "TEMP"
+TEMP_FOLDER = args.tempdir
 AUDIO_FADE_ENVELOPE_SIZE = 400 # smooth out transitiion's audio by quickly fading in/out (arbitrary magic number whatever)
-    
+
 createPath(TEMP_FOLDER)
 
-command = "ffmpeg -i "+INPUT_FILE+" -qscale:v "+str(FRAME_QUALITY)+" "+TEMP_FOLDER+"/frame%06d.jpg -hide_banner"
+command = FFMPEGCMD + "-i "+INPUT_FILE+" -qscale:v "+str(FRAME_QUALITY)+" "+TEMP_FOLDER+"/frame%06d.jpg -hide_banner"
 subprocess.call(command, shell=True)
 
-command = "ffmpeg -i "+INPUT_FILE+" -ab 160k -ac 2 -ar "+str(SAMPLE_RATE)+" -vn "+TEMP_FOLDER+"/audio.wav"
+command = FFMPEGCMD + "-i "+INPUT_FILE+" -ab 160k -ac 2 -ar "+str(SAMPLE_RATE)+" -vn "+TEMP_FOLDER+"/audio.wav"
 
 subprocess.call(command, shell=True)
 
-command = "ffmpeg -i "+TEMP_FOLDER+"/input.mp4 2>&1"
+command = FFMPEGCMD + "-i "+TEMP_FOLDER+"/input.mp4 2>&1"
 f = open(TEMP_FOLDER+"/params.txt", "w")
 subprocess.call(command, shell=True, stdout=f)
 
@@ -152,7 +167,7 @@ outputPointer = 0
 lastExistingFrame = None
 for chunk in chunks:
     audioChunk = audioData[int(chunk[0]*samplesPerFrame):int(chunk[1]*samplesPerFrame)]
-    
+
     sFile = TEMP_FOLDER+"/tempStart.wav"
     eFile = TEMP_FOLDER+"/tempEnd.wav"
     wavfile.write(sFile,SAMPLE_RATE,audioChunk)
@@ -168,7 +183,7 @@ for chunk in chunks:
     #outputAudioData[outputPointer:endPointer] = alteredAudioData/maxAudioVolume
 
     # smooth out transitiion's audio by quickly fading in/out
-    
+
     if leng < AUDIO_FADE_ENVELOPE_SIZE:
         outputAudioData[outputPointer:endPointer] = 0 # audio is less than 0.01 sec, let's just remove it.
     else:
@@ -197,8 +212,7 @@ for endGap in range(outputFrame,audioFrameCount):
     copyFrame(int(audioSampleCount/samplesPerFrame)-1,endGap)
 '''
 
-command = "ffmpeg -framerate "+str(frameRate)+" -i "+TEMP_FOLDER+"/newFrame%06d.jpg -i "+TEMP_FOLDER+"/audioNew.wav -strict -2 "+OUTPUT_FILE
+command = FFMPEGCMD + "-framerate "+str(frameRate)+" -i "+TEMP_FOLDER+"/newFrame%06d.jpg -i "+TEMP_FOLDER+"/audioNew.wav -strict -2 "+OUTPUT_FILE
 subprocess.call(command, shell=True)
 
 deletePath(TEMP_FOLDER)
-
