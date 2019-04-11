@@ -9,7 +9,7 @@ Use your favorite AUR helper and install the `jumpcutter-git` package.
 For example, Using yay: `yay jumpcutter-git`
 Then you can use the binary located in /usr/bin/jumpcutter
 
-### NixOS
+### Nix
 `nix-build` to get a script with all the libraries and ffmpeg, `nix-build -A bundle` to get a single binary.
 
 ### Other
