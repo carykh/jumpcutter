@@ -10,6 +10,13 @@ import math
 from shutil import copyfile, rmtree
 import os
 import argparse
+from pytube import YouTube
+
+def downloadFile(url):
+    name = YouTube(url).streams.first().download()
+    newname = name.replace(' ','_')
+    os.rename(name,newname)
+    return newname
 
 def getMaxVolume(s):
     maxv = float(np.max(s))
@@ -47,6 +54,7 @@ def deletePath(s): # Dangerous! Watch out!
 
 parser = argparse.ArgumentParser(description='Modifies a video file to play at different speeds when there is sound vs. silence.')
 parser.add_argument('--input_file', type=str,  help='the video file you want modified')
+parser.add_argument('--url', type=str, help='A youtube url to download and process')
 parser.add_argument('--output_file', type=str, default="", help="the output file. (optional. if not included, it'll just modify the input file name)")
 parser.add_argument('--silent_threshold', type=float, default=0.03, help="the volume amount that frames' audio needs to surpass to be consider \"sounded\". It ranges from 0 (silence) to 1 (max volume)")
 parser.add_argument('--sounded_speed', type=float, default=1.00, help="the speed that sounded (spoken) frames should be played at. Typically 1.")
@@ -58,19 +66,26 @@ parser.add_argument('--frame_quality', type=int, default=3, help="quality of fra
 
 args = parser.parse_args()
 
+
+
 frameRate = args.frame_rate
 SAMPLE_RATE = args.sample_rate
 SILENT_THRESHOLD = args.silent_threshold
 FRAME_SPREADAGE = args.frame_margin
 NEW_SPEED = [args.silent_speed, args.sounded_speed]
-INPUT_FILE = args.input_file
+if args.url != None:
+    INPUT_FILE = downloadFile(args.url)
+else:
+    INPUT_FILE = args.input_file
+URL = args.url
 FRAME_QUALITY = args.frame_quality
 
-assert INPUT_FILE != None, "why u put no input file, that dum"
+assert INPUT_FILE != None , "why u put no input file, that dum"
     
-OUTPUT_FILE = inputToOutputFilename(INPUT_FILE)
 if len(args.output_file) >= 1:
     OUTPUT_FILE = args.output_file
+else:
+    OUTPUT_FILE = inputToOutputFilename(INPUT_FILE)
 
 TEMP_FOLDER = "TEMP"
 AUDIO_FADE_ENVELOPE_SIZE = 400 # smooth out transitiion's audio by quickly fading in/out (arbitrary magic number whatever)
