@@ -1,6 +1,21 @@
 # jumpcutter
 Automatically edits videos. Explanation here: https://www.youtube.com/watch?v=DQ8orIurGxw
 
+## Installing & Running
+
+### Arch Linux
+Use your favorite AUR helper and install the `jumpcutter-git` package.
+
+For example, Using yay: `yay jumpcutter-git`
+Then you can use the binary located in /usr/bin/jumpcutter
+
+### NixOS
+`nix-build` to get a script with all the libraries and ffmpeg, `nix-build -A bundle` to get a single binary.
+
+### Other
+Obtain the dependencies: `pip install -r requirements.txt`
+And run it: `python jumpcutter.py`
+
 ## Some heads-up:
 
 It uses Python 3.
@@ -16,6 +31,3 @@ I have processed 17-minute videos completely fine, but be wary if you're gonna g
 I want to use pyinstaller to turn this into an executable, so non-techy people
 can use it EVEN IF they don't have Python and all those libraries. Jabrils 
 recommended this to me. However, my pyinstaller build did not work. :( HELP
-
-## Building with nix
-`nix-build` to get a script with all the libraries and ffmpeg, `nix-build -A bundle` to get a single binary.
