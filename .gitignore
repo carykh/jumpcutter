@@ -93,3 +93,7 @@ ENV/
 *.iml
 out
 gen
+
+# NSIS files
+*.exe
+*.spec
