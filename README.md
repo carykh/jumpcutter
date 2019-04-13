@@ -19,3 +19,6 @@ recommended this to me. However, my pyinstaller build did not work. :( HELP
 
 ## Building with nix
 `nix-build` to get a script with all the libraries and ffmpeg, `nix-build -A bundle` to get a single binary.
+
+## Requirements
+To install the python requirements run the following `cat requirements.txt | sudo xargs pip3 install`
