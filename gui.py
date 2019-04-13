@@ -74,7 +74,7 @@ class Window(tk.Tk):
         Hovertip(self.frame_quality, "The quality of frames to be extracted from the input video")
 
     def run(self):
-        subprocess.call(f"python jumpcutter.py --input_file {self.input_file.get()} --output_file {self.output_file.get()} --silent_threshold {self.silent_threshold} --sounded_speed {self.sounded_speed} --silent_speed {self.silent_speed} --frame_margin {self.frame_margin} --sample_rate {self.sample_rate} --frame_rate {self.frame_rate} --frame_quality {self.frame_quality}")
+        subprocess.call(f"python jumpcutter.py --input_file {self.input_file.get()} --output_file {self.output_file.get()} --silent_threshold {self.silent_threshold.get()} --sounded_speed {self.sounded_speed.get()} --silent_speed {self.silent_speed.get()} --frame_margin {self.frame_margin.get()} --sample_rate {self.sample_rate.get()} --frame_rate {self.frame_rate.get()} --frame_quality {self.frame_quality.get()}")
 
 
 if __name__ == "__main__":
