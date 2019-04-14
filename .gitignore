@@ -96,4 +96,7 @@ gen
 
 # NSIS files
 *.exe
+
+# Other weird files
 *.spec
+TEMP
