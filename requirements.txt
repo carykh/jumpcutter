@@ -2,4 +2,6 @@ Pillow
 audiotsm
 scipy
 numpy
-pytube
+youtube_dl
+opencv-python
+requests
