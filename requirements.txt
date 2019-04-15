@@ -5,3 +5,4 @@ numpy
 youtube_dl
 opencv-python
 requests
+psutil

@@ -11,9 +11,10 @@ import os
 import argparse
 import youtube_dl
 import cv2
-from platform import system
+import psutil
 import requests
 import zipfile
+import tarfile
 
 TEMP_FOLDER = "TEMP"
 
@@ -35,8 +36,8 @@ def findFramerate(filename):
 
 def checkForFFMPEG():
     if which("ffmpeg") is None:
-        if system() == 'Windows':
-            print("Installing ffmpeg")
+        if psutil.WINDOWS:
+            print("Installing ffmpeg for Windows (32 bit)")
             archive = requests.get("https://ffmpeg.zeranoe.com/builds/win32/static/ffmpeg-4.1.1-win32-static.zip")
             with open("ffmpeg-4.1.1-win32-static.zip", 'wb') as t:
                 t.write(archive.content)
@@ -45,8 +46,28 @@ def checkForFFMPEG():
             move("ffmpeg-4.1.1-win32-static/bin/ffmpeg.exe", "ffmpeg.exe")
             rmtree("ffmpeg-4.1.1-win32-static")
             os.remove("ffmpeg-4.1.1-win32-static.zip")
+        elif psutil.MACOS:
+            print("Installing ffmpeg for MacOS (64 bit)")
+            archive = requests.get("https://ffmpeg.zeranoe.com/builds/macos64/static/ffmpeg-4.1.1-macos64-static.zip")
+            with open("ffmpeg-4.1.1-macos64-static.zip", 'wb') as t:
+                t.write(archive.content)
+            with zipfile.ZipFile("ffmpeg-4.1.1-macos64-static.zip", "r") as zip_ref:
+                zip_ref.extractall(".")
+            move("ffmpeg-4.1.1-macos64-static/bin/ffmpeg", "ffmpeg")
+            rmtree("ffmpeg-4.1.1-macos64-static")
+            os.remove("ffmpeg-4.1.1-macos64-static.zip")
+        elif psutil.LINUX:
+            print("Installing ffmpeg for Linux (32 bit)")
+            archive = requests.get("https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-i686-static.tar.xz")
+            with open("ffmpeg-release-i686-static.tar.xz", 'wb') as t:
+                t.write(archive.content)
+            with tarfile.open("ffmpeg-release-i686-static.tar.xz", "r") as tar_ref:
+                tar_ref.extractall(".")
+            move("ffmpeg-release-i686-static/ffmpeg", "ffmpeg")
+            rmtree("ffmpeg-release-i686-static")
+            os.remove("ffmpeg-release-i686-static.tar.xz")
         else:
-            assert False, "Support for automatic ffmpeg installation on non-Windows systems has not been implemented yet. Please install ffmpeg from your OS's package manager"
+            assert False, "Jumpcutter cannot find ffmpeg and automatic ffmpeg installation is not supported on your OS"
 
 def getMaxVolume(s):
     maxv = float(np.max(s))
@@ -210,7 +231,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='Modifies a video file to play at different speeds when there is sound vs. silence.')
     parser.add_argument('--input_file', type=str, help='the video file you want modified')
-    parser.add_argument('--url', type=str, help='A youtube url to download and process')
+    parser.add_argument('--url', type=str, help='A video url to download and process through youtube-dl')
     parser.add_argument('--output_file', type=str, default="",
                         help="the output file. (optional. if not included, it'll just modify the input file name)")
     parser.add_argument('--silent_threshold', type=float, default=0.03,
