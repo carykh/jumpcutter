@@ -3,9 +3,9 @@ Automatically edits videos. Explanation here: https://www.youtube.com/watch?v=DQ
 
 ## Some heads-up:
 
-I programmed it in Python 2.
+It uses Python 3.
 
-I have only ever tested this on Ubuntu 16.04... not sure if that makes a difference!
+It works on Ubuntu 16.04 and Windows 10. (It might work on other OSs too, we just haven't tested it yet.)
 
 This program relies heavily on ffmpeg. It will start subprocesses that call ffmpeg, so be aware of that!
 
@@ -16,3 +16,6 @@ I have processed 17-minute videos completely fine, but be wary if you're gonna g
 I want to use pyinstaller to turn this into an executable, so non-techy people
 can use it EVEN IF they don't have Python and all those libraries. Jabrils 
 recommended this to me. However, my pyinstaller build did not work. :( HELP
+
+## Building with nix
+`nix-build` to get a script with all the libraries and ffmpeg, `nix-build -A bundle` to get a single binary.
