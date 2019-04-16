@@ -13,13 +13,15 @@ class Window(tk.Tk):
         self.columnconfigure(1, weight=1)
 
         # Main Widgets
+        filetypes = [("MP4 Files", "*.mp4"), ("All Files", "*.*")]
+
         ttk.Label(self, text="Input File:").grid(row=0, column=0, sticky="e")
-        self.input_file = pk.FilePicker(self)
+        self.input_file = pk.FilePicker(self, filetypes=filetypes)
         self.input_file.grid(row=0, column=1, sticky="we", padx=6, pady=2)
         Hovertip(self.input_file._entry, "The video file you want modified")
 
         ttk.Label(self, text="Output File:").grid(row=1, column=0, sticky="e")
-        self.output_file = pk.FilePicker(self)
+        self.output_file = pk.FilePicker(self, "save", filetypes=filetypes, defaultextension=".mp4")
         self.output_file.grid(row=1, column=1, sticky="we", padx=6, pady=2)
         Hovertip(self.output_file._entry, "The modified video")
 
