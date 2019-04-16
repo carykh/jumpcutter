@@ -12,38 +12,78 @@ class Window(tk.Tk):
         self.title("Jump Cutter")
         self.columnconfigure(1, weight=1)
 
+        row = 0
+
         # Main Widgets
         filetypes = [("MP4 Files", "*.mp4"), ("All Files", "*.*")]
 
-        ttk.Label(self, text="Input File:").grid(row=0, column=0, sticky="e")
-        self.input_file = pk.FilePicker(self, filetypes=filetypes)
-        self.input_file.grid(row=0, column=1, sticky="we", padx=6, pady=2)
-        Hovertip(self.input_file._entry, "The video file you want modified")
+        self.input_file = None
+        self.input_label = None
+        self.video_type = tk.BooleanVar()
 
-        ttk.Label(self, text="Output File:").grid(row=1, column=0, sticky="e")
+        def input_type():
+            if self.input_file is not None:
+                self.input_file.grid_forget()
+
+            if self.input_label is not None:
+                self.input_label.grid_forget()
+
+            if not self.video_type.get():
+                input_label_text = "Input File:"
+
+                self.input_file = pk.FilePicker(self, filetypes=filetypes)
+                Hovertip(self.input_file._entry, "The video file you want modified")
+
+            else:
+                input_label_text = "YouTube Link:"
+
+                self.input_file = ttk.Entry(self)
+                Hovertip(self.input_file, "The YouTube video you want modified")
+
+            self.input_label = ttk.Label(self, text=input_label_text)
+            self.input_label.grid(row=0, column=0, sticky="e")
+            self.input_file.grid(row=0, column=1, sticky="we", padx=6, pady=2)
+
+        input_type()
+
+        row += 1
+        self.video_type = tk.BooleanVar()
+        self.file_radio_frame = ttk.Frame(self)
+        self.file_radio_frame.columnconfigure((0, 1), weight=1)
+        self.file_radio_frame.grid(row=row, column=0, columnspan=2, sticky="nesw")
+        ttk.Radiobutton(self.file_radio_frame, text="Local file", variable=self.video_type, value=False, command=input_type).grid(row=row, column=0)
+        ttk.Radiobutton(self.file_radio_frame, text="YouTube link", variable=self.video_type, value=True, command=input_type).grid(row=row, column=1)
+
+        row += 1
+        ttk.Label(self, text="Output File:").grid(row=row, column=0, sticky="e")
         self.output_file = pk.FilePicker(self, "save", filetypes=filetypes, defaultextension=".mp4")
-        self.output_file.grid(row=1, column=1, sticky="we", padx=6, pady=2)
+        self.output_file.grid(row=row, column=1, sticky="we", padx=6, pady=2)
         Hovertip(self.output_file._entry, "The modified video")
 
-        ttk.Separator(self, orient="horizontal").grid(row=2, column=0, columnspan=2, sticky="we", padx=6)
+        row += 1
+        ttk.Separator(self, orient="horizontal").grid(row=row, column=0, columnspan=2, sticky="we", padx=6)
 
-        ttk.Label(self, text="Sounded Speed:").grid(row=3, column=0, sticky="e")
+        row += 1
+        ttk.Label(self, text="Sounded Speed:").grid(row=row, column=0, sticky="e")
         self.sounded_speed = pk.EntryText(self, text="1.00")
-        self.sounded_speed.grid(row=3, column=1, sticky="we", padx=6, pady=2)
+        self.sounded_speed.grid(row=row, column=1, sticky="we", padx=6, pady=2)
         Hovertip(self.sounded_speed, "The speed that frame's with sound, above the threshold, should be played at")
 
-        ttk.Label(self, text="Silent Speed:").grid(row=4, column=0, sticky="e")
+        row += 1
+        ttk.Label(self, text="Silent Speed:").grid(row=row, column=0, sticky="e")
         self.silent_speed = pk.EntryText(self, text="5.00")
-        self.silent_speed.grid(row=4, column=1, sticky="we", padx=6, pady=2)
+        self.silent_speed.grid(row=row, column=1, sticky="we", padx=6, pady=2)
         Hovertip(self.silent_speed, "The speed that frame's with sound, below the threshold, should be played at")
 
+        row += 1
         advanced_settings = pk.ToggledLabelFrame(self, "Hide Advanced Settings", "Show Advanced Settings")
-        advanced_settings.grid(row=5, column=0, columnspan=2, sticky="nesw", padx=6, pady=2)
+        advanced_settings.grid(row=row, column=0, columnspan=2, sticky="nesw", padx=6, pady=2)
         advanced_settings.frame.columnconfigure(1, weight=1)
         advanced_settings._button.configure(width=30)
 
+        row += 1
         run = ttk.Button(self, text="Run", command=self.run)
-        run.grid(row=6, column=0, columnspan=2, pady=6)
+        run.grid(row=row, column=0, columnspan=2, pady=6)
 
         # Advanced Settings Widgets
         ttk.Label(advanced_settings.frame, text="Silent Threshold:").grid(row=0, column=0, sticky="e")
@@ -76,7 +116,7 @@ class Window(tk.Tk):
         Hovertip(self.frame_quality, "The quality of frames to be extracted from the input video")
 
     def run(self):
-        subprocess.call(f"python jumpcutter.py --input_file {self.input_file.get()} --output_file {self.output_file.get()} --silent_threshold {self.silent_threshold.get()} --sounded_speed {self.sounded_speed.get()} --silent_speed {self.silent_speed.get()} --frame_margin {self.frame_margin.get()} --sample_rate {self.sample_rate.get()} --frame_rate {self.frame_rate.get()} --frame_quality {self.frame_quality.get()}")
+        subprocess.call(f"python jumpcutter.py {'--input_file' if not self.video_type else '--url'} {self.input_file.get()} --output_file {self.output_file.get()} --silent_threshold {self.silent_threshold.get()} --sounded_speed {self.sounded_speed.get()} --silent_speed {self.silent_speed.get()} --frame_margin {self.frame_margin.get()} --sample_rate {self.sample_rate.get()} --frame_rate {self.frame_rate.get()} --frame_quality {self.frame_quality.get()}")
 
 
 if __name__ == "__main__":
