@@ -80,7 +80,7 @@ else:
 URL = args.url
 FRAME_QUALITY = args.frame_quality
 
-assert INPUT_FILE != None , "why u put no input file, that dum"
+assert INPUT_FILE != None , "Whoops, it looked like you haven't put anything to input yet! Use 'jumpcutter.py' -h for more info."
     
 if len(args.output_file) >= 1:
     OUTPUT_FILE = args.output_file
