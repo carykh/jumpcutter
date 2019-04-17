@@ -52,8 +52,10 @@ class Window(tk.Tk):
         self.file_radio_frame = ttk.Frame(self)
         self.file_radio_frame.columnconfigure((0, 1), weight=1)
         self.file_radio_frame.grid(row=row, column=0, columnspan=3, sticky="nesw")
-        ttk.Radiobutton(self.file_radio_frame, text="Local File", variable=self.video_type, value=False, command=input_type).grid(row=row, column=0)
-        ttk.Radiobutton(self.file_radio_frame, text="YouTube Link", variable=self.video_type, value=True, command=input_type).grid(row=row, column=1)
+        ttk.Radiobutton(self.file_radio_frame, text="Local File", variable=self.video_type, value=False,
+                        command=input_type).grid(row=row, column=0)
+        ttk.Radiobutton(self.file_radio_frame, text="YouTube Link", variable=self.video_type, value=True,
+                        command=input_type).grid(row=row, column=1)
 
         row += 1
         ttk.Label(self, text="Output File:").grid(row=row, column=0, sticky="e")
@@ -66,7 +68,8 @@ class Window(tk.Tk):
 
         row += 1
         ttk.Label(self, text="Sounded Speed:").grid(row=row, column=0, sticky="e")
-        self.sounded_speed = pk.EntrySpinbox(self, text="1.00", to=50, increment=0.01, format_="%0.2f", width=entry_width)
+        self.sounded_speed = pk.EntrySpinbox(self, text="1.00", to=50, increment=0.01, format_="%0.2f",
+                                             width=entry_width)
         self.sounded_speed_scale = pk.RoundingScale(self, to=50, precision=2, variable=self.sounded_speed._variable)
         self.sounded_speed_scale.grid(row=row, column=1, sticky="we")
         self.sounded_speed.grid(row=row, column=2, padx=6, pady=2)
@@ -74,7 +77,8 @@ class Window(tk.Tk):
 
         row += 1
         ttk.Label(self, text="Silent Speed:").grid(row=row, column=0, sticky="e")
-        self.silent_speed = pk.EntrySpinbox(self, text="5.00", to=50, increment=0.01, format_="%0.2f", width=entry_width)
+        self.silent_speed = pk.EntrySpinbox(self, text="5.00", to=50, increment=0.01, format_="%0.2f",
+                                            width=entry_width)
         self.sounded_speed_scale = pk.RoundingScale(self, to=50, precision=2, variable=self.silent_speed._variable)
         self.sounded_speed_scale.grid(row=row, column=1, sticky="we")
         self.silent_speed.grid(row=row, column=2, padx=6, pady=2)
@@ -92,46 +96,64 @@ class Window(tk.Tk):
 
         # Advanced Settings Widgets
         ttk.Label(advanced_settings.frame, text="Silent Threshold:").grid(row=0, column=0, sticky="e")
-        self.silent_threshold = pk.EntrySpinbox(advanced_settings.frame, text="0.03", to=1, increment=0.01, format_="%0.2f", width=entry_width)
-        self.silent_threshold_scale = pk.RoundingScale(advanced_settings.frame, to=1, precision=2, variable=self.silent_threshold._variable)
+        self.silent_threshold = pk.EntrySpinbox(advanced_settings.frame, text="0.03", to=1, increment=0.01,
+                                                format_="%0.2f", width=entry_width)
+        self.silent_threshold_scale = pk.RoundingScale(advanced_settings.frame, to=1, precision=2,
+                                                       variable=self.silent_threshold._variable)
         self.silent_threshold_scale.grid(row=0, column=1, sticky="we")
         self.silent_threshold.grid(row=0, column=2, padx=6, pady=2)
-        Hovertip(self.silent_threshold, "The volume amount that frames' audio needs to surpass to be consider \"sounded\"")
+        Hovertip(self.silent_threshold,
+                 "The volume amount that frames' audio needs to surpass to be consider \"sounded\"")
 
-        ttk.Separator(advanced_settings.frame, orient="horizontal").grid(row=1, column=0, columnspan=3, sticky="we", padx=6)
+        ttk.Separator(advanced_settings.frame, orient="horizontal").grid(row=1, column=0, columnspan=3, sticky="we",
+                                                                         padx=6)
 
         ttk.Label(advanced_settings.frame, text="Sample Rate:").grid(row=2, column=0, sticky="e")
         self.sample_rate = pk.EntrySpinbox(advanced_settings.frame, text="44100", to=44100 * 3, width=entry_width)
-        self.sample_rate_scale = pk.RoundingScale(advanced_settings.frame, to=44100 * 3, precision=0, variable=self.sample_rate._variable)
+        self.sample_rate_scale = pk.RoundingScale(advanced_settings.frame, to=44100 * 3, precision=0,
+                                                  variable=self.sample_rate._variable)
         self.sample_rate_scale.grid(row=2, column=1, sticky="we")
         self.sample_rate.grid(row=2, column=2, padx=6, pady=2)
         Hovertip(self.sample_rate, "The sample rate of the input and output videos")
 
-        ttk.Separator(advanced_settings.frame, orient="horizontal").grid(row=3, column=0, columnspan=3, sticky="we", padx=6)
+        ttk.Separator(advanced_settings.frame, orient="horizontal").grid(row=3, column=0, columnspan=3, sticky="we",
+                                                                         padx=6)
 
         ttk.Label(advanced_settings.frame, text="Frame Margin:").grid(row=4, column=0, sticky="e")
         self.frame_margin = pk.EntrySpinbox(advanced_settings.frame, text="1", to=144, width=entry_width)
-        self.frame_margin_scale = pk.RoundingScale(advanced_settings.frame, to=144, precision=0, variable=self.frame_margin._variable)
+        self.frame_margin_scale = pk.RoundingScale(advanced_settings.frame, to=144, precision=0,
+                                                   variable=self.frame_margin._variable)
         self.frame_margin_scale.grid(row=4, column=1, sticky="we")
         self.frame_margin.grid(row=4, column=2, padx=6, pady=2)
         Hovertip(self.frame_margin, "The amount of silent frames adjacent to sounded frames to be included")
 
         ttk.Label(advanced_settings.frame, text="Frame Rate:").grid(row=5, column=0, sticky="e")
         self.frame_rate = pk.EntrySpinbox(advanced_settings.frame, text="30", to=144, width=entry_width)
-        self.frame_rate_scale = pk.RoundingScale(advanced_settings.frame, to=144, precision=0, variable=self.frame_rate._variable)
+        self.frame_rate_scale = pk.RoundingScale(advanced_settings.frame, to=144, precision=0,
+                                                 variable=self.frame_rate._variable)
         self.frame_rate_scale.grid(row=5, column=1, sticky="we")
         self.frame_rate.grid(row=5, column=2, padx=6, pady=2)
         Hovertip(self.frame_rate, "The frame rate of the input and output videos")
 
         ttk.Label(advanced_settings.frame, text="Frame Quality:").grid(row=6, column=0, sticky="e")
         self.frame_quality = pk.EntrySpinbox(advanced_settings.frame, text="3", to=31, width=entry_width)
-        self.frame_quality_scale = pk.RoundingScale(advanced_settings.frame, to=31, precision=0, variable=self.frame_quality._variable)
+        self.frame_quality_scale = pk.RoundingScale(advanced_settings.frame, to=31, precision=0,
+                                                    variable=self.frame_quality._variable)
         self.frame_quality_scale.grid(row=6, column=1, sticky="we")
         self.frame_quality.grid(row=6, column=2, padx=6, pady=2)
         Hovertip(self.frame_quality, "The quality of frames to be extracted from the input video")
 
     def run(self):
-        subprocess.call(f"python jumpcutter.py {'--input_file' if not self.video_type else '--url'} {self.input_file.get()} --output_file {self.output_file.get()} --silent_threshold {self.silent_threshold.get()} --sounded_speed {self.sounded_speed.get()} --silent_speed {self.silent_speed.get()} --frame_margin {self.frame_margin.get()} --sample_rate {self.sample_rate.get()} --frame_rate {self.frame_rate.get()} --frame_quality {self.frame_quality.get()}")
+        subprocess.call(("python jumpcutter.py",
+                         f"{'--input_file' if not self.video_type else '--url'} {self.input_file.get()}",
+                         f"--output_file {self.output_file.get()}",
+                         f"--silent_threshold {self.silent_threshold.get()}",
+                         f"--sounded_speed {self.sounded_speed.get()}",
+                         f"--silent_speed {self.silent_speed.get()}",
+                         f"--frame_margin {self.frame_margin.get()}",
+                         f" --sample_rate {self.sample_rate.get()}",
+                         f"--frame_rate {self.frame_rate.get()}",
+                         f" --frame_quality {self.frame_quality.get()}"))
 
 
 if __name__ == "__main__":
