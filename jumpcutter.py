@@ -63,8 +63,8 @@ parser.add_argument('--frame_margin', type=float, default=1, help="some silent f
 parser.add_argument('--sample_rate', type=float, default=44100, help="sample rate of the input and output videos")
 parser.add_argument('--frame_rate', type=float, default=30, help="frame rate of the input and output videos. optional... I try to find it out myself, but it doesn't always work.")
 parser.add_argument('--frame_quality', type=int, default=3, help="quality of frames to be extracted from input video. 1 is highest, 31 is lowest, 3 is the default.")
-parser.add_argument('--preset', type=str, default="ultrafast", help="A preset is a collection of options that will provide a certain encoding speed to compression ratio. See https://trac.ffmpeg.org/wiki/Encode/H.264")
-parser.add_argument('--crf', type=int, default=18, help="Constant Rate Factor (CRF). Lower value - better quality but large filesize. See https://trac.ffmpeg.org/wiki/Encode/H.264")
+parser.add_argument('--preset', type=str, default="medium", help="A preset is a collection of options that will provide a certain encoding speed to compression ratio. See https://trac.ffmpeg.org/wiki/Encode/H.264")
+parser.add_argument('--crf', type=int, default=23, help="Constant Rate Factor (CRF). Lower value - better quality but large filesize. See https://trac.ffmpeg.org/wiki/Encode/H.264")
 
 args = parser.parse_args()
 
