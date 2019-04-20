@@ -17,8 +17,6 @@ I want to use pyinstaller to turn this into an executable, so non-techy people
 can use it EVEN IF they don't have Python and all those libraries. Jabrils 
 recommended this to me. However, my pyinstaller build did not work. :( HELP
 
+There might be updates in this repository. If you have git installed, the easiest way to update is by doing ``git pull`` in a command prompt or terminal.
 ## Building with nix
 `nix-build` to get a script with all the libraries and ffmpeg, `nix-build -A bundle` to get a single binary.
-
-### Note to users:
-There might be updates in this repository. If you have git installed, the easiest way to update is by doing ``git pull`` in a command prompt or terminal.
