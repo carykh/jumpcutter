@@ -54,8 +54,6 @@ def deletePath(s): # Dangerous! Watch out!
         print(OSError)
 
 parser = argparse.ArgumentParser(description='Modifies a video file to play at different speeds when there is sound vs. silence.')
-parser.add_argument('--input_file', type=str,  help='the video file you want modified')
-parser.add_argument('--url', type=str, help='A youtube url to download and process')
 parser.add_argument('--output_file', type=str, default="", help="the output file. (optional. if not included, it'll just modify the input file name)")
 parser.add_argument('--silent_threshold', type=float, default=0.03, help="the volume amount that frames' audio needs to surpass to be consider \"sounded\". It ranges from 0 (silence) to 1 (max volume). Default is 0.03.")
 parser.add_argument('--sounded_speed', type=float, default=1.00, help="the speed that sounded (spoken) frames should be played at. Typically 1 by default.")
@@ -64,6 +62,8 @@ parser.add_argument('--frame_margin', type=float, default=1, help="some silent f
 parser.add_argument('--sample_rate', type=float, default=44100, help="sample rate of the input and output videos. Default is 44100Hz.")
 parser.add_argument('--frame_rate', type=float, default=30, help="frame rate of the input and output videos. optional... I try to find it out myself, but it doesn't always work.")
 parser.add_argument('--frame_quality', type=int, default=3, help="quality of frames to be extracted from input video. 1 is highest, 31 is lowest, 3 is the default.")
+parser.add_argument('--url', action='store_true', default=False, help="Add this if the 'input_file' argument is actually a link you want me to download")
+parser.add_argument('input_file', type=str,  help='the video file you want modified')
 
 args = parser.parse_args()
 
@@ -74,15 +74,13 @@ SAMPLE_RATE = args.sample_rate
 SILENT_THRESHOLD = args.silent_threshold
 FRAME_SPREADAGE = args.frame_margin
 NEW_SPEED = [args.silent_speed, args.sounded_speed]
-if args.url != None:
-    INPUT_FILE = downloadFile(args.url)
+if args.url == True:
+    INPUT_FILE = downloadFile(args.input_file)
 else:
     INPUT_FILE = args.input_file
 URL = args.url
 FRAME_QUALITY = args.frame_quality
 
-assert INPUT_FILE != None , "why u put no input file, that dum"
-    
 if len(args.output_file) >= 1:
     OUTPUT_FILE = args.output_file
 else:
