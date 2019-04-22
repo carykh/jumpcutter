@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from contextlib import closing
 from PIL import Image
 import subprocess
