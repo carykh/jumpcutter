@@ -17,5 +17,8 @@ I want to use pyinstaller to turn this into an executable, so non-techy people
 can use it EVEN IF they don't have Python and all those libraries. Jabrils 
 recommended this to me. However, my pyinstaller build did not work. :( HELP
 
+The batch file will allow windows users to have a more simple menu for adjusting setting. Linux users can
+also run the batch file but must install Wine to do so :D
+
 ## Building with nix
 `nix-build` to get a script with all the libraries and ffmpeg, `nix-build -A bundle` to get a single binary.
