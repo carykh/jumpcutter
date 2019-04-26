@@ -20,5 +20,23 @@ recommended this to me. However, my pyinstaller build did not work. :( HELP
 The batch file will allow windows users to have a more simple menu for adjusting setting. Linux users can
 also run the batch file but must install Wine to do so :D
 
+## The set-up
+To be able to use this editor, you will have to do the following:
+
+1. Download the files here
+2. Move all of these files into your \videos folder
+3. Download and install Python 3 (Note: I recommend getting the 64-bit version)
+4. Download and install get-pip (Note: You will need get-pip to download the needed libarys)
+5. Download and install ffmpeg
+6. Move ffmpeg.exe to the \videos folder
+7. In control pannel, go to "System" -> "Advance system settings" -> "Enviroment Variables", find Path in System Variables list and double click it
+8. Add the path to the python folder and the python scripts folder and then click ok to all the windows
+9. Open cmd and run the following lines:
+``cd \videos
+  pip install -r requirements.txt``
+10. Now double click jumpcutter.bat
+
+The program should now be running and ready to use
+
 ## Building with nix
 `nix-build` to get a script with all the libraries and ffmpeg, `nix-build -A bundle` to get a single binary.
