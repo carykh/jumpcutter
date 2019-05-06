@@ -13,10 +13,21 @@ import argparse
 from pytube import YouTube
 
 def downloadFile(url):
-    name = YouTube(url).streams.first().download()
-    newname = name.replace(' ','_')
-    os.rename(name,newname)
-    return newname
+    sep = os.path.sep
+    originalPath = YouTube(url).streams.first().download()
+    filepath = originalPath.split(sep)
+    filepath[-1] = filepath[-1].replace(' ','_')
+    filepath = sep.join(filepath)
+    os.rename(originalPath, filepath)
+    return filepath
+
+
+def getFrameRate(path):
+    process = subprocess.Popen(["ffmpeg", "-i", path], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    stdout, _ = process.communicate()
+    output =  stdout.decode()
+    match_dict = re.search(r"\s(?P<fps>[\d\.]+?)\stbr", output).groupdict()
+    return float(match_dict["fps"])
 
 def getMaxVolume(s):
     maxv = float(np.max(s))
@@ -38,7 +49,6 @@ def inputToOutputFilename(filename):
     return filename[:dotIndex]+"_ALTERED"+filename[dotIndex:]
 
 def createPath(s):
-    #assert (not os.path.exists(s)), "The filepath "+s+" already exists. Don't want to overwrite it. Aborting."
 
     try:  
         os.mkdir(s)
@@ -57,12 +67,15 @@ parser.add_argument('--input_file', type=str,  help='the video file you want mod
 parser.add_argument('--url', type=str, help='A youtube url to download and process')
 parser.add_argument('--output_file', type=str, default="", help="the output file. (optional. if not included, it'll just modify the input file name)")
 parser.add_argument('--silent_threshold', type=float, default=0.03, help="the volume amount that frames' audio needs to surpass to be consider \"sounded\". It ranges from 0 (silence) to 1 (max volume)")
-parser.add_argument('--sounded_speed', type=float, default=1.00, help="the speed that sounded (spoken) frames should be played at. Typically 1.")
-parser.add_argument('--silent_speed', type=float, default=5.00, help="the speed that silent frames should be played at. 999999 for jumpcutting.")
+parser.add_argument('--sounded_speed', type=float, default=1.70, help="the speed that sounded (spoken) frames should be played at. Typically 1.")
+parser.add_argument('--silent_speed', type=float, default=8.00, help="the speed that silent frames should be played at. 999999 for jumpcutting.")
 parser.add_argument('--frame_margin', type=float, default=1, help="some silent frames adjacent to sounded frames are included to provide context. How many frames on either the side of speech should be included? That's this variable.")
 parser.add_argument('--sample_rate', type=float, default=44100, help="sample rate of the input and output videos")
-parser.add_argument('--frame_rate', type=float, default=30, help="frame rate of the input and output videos. optional... I try to find it out myself, but it doesn't always work.")
+parser.add_argument('--frame_rate', type=float, help="frame rate of the input and output videos. optional... I try to find it out myself, but it doesn't always work.")
 parser.add_argument('--frame_quality', type=int, default=3, help="quality of frames to be extracted from input video. 1 is highest, 31 is lowest, 3 is the default.")
+parser.add_argument('--preset', type=str, default="medium", help="A preset is a collection of options that will provide a certain encoding speed to compression ratio. See https://trac.ffmpeg.org/wiki/Encode/H.264")
+parser.add_argument('--crf', type=int, default=23, help="Constant Rate Factor (CRF). Lower value - better quality but large filesize. See https://trac.ffmpeg.org/wiki/Encode/H.264")
+
 
 args = parser.parse_args()
 
@@ -79,8 +92,12 @@ else:
     INPUT_FILE = args.input_file
 URL = args.url
 FRAME_QUALITY = args.frame_quality
+H264_PRESET = args.preset
+H264_CRF = args.crf
 
 assert INPUT_FILE != None , "why u put no input file, that dum"
+assert FRAME_QUALITY < 32 , "The max value for frame quality is 31."
+assert FRAME_QUALITY > 0 , "The min value for frame quality is 1."
     
 if len(args.output_file) >= 1:
     OUTPUT_FILE = args.output_file
@@ -99,24 +116,14 @@ command = "ffmpeg -i "+INPUT_FILE+" -ab 160k -ac 2 -ar "+str(SAMPLE_RATE)+" -vn 
 
 subprocess.call(command, shell=True)
 
-command = "ffmpeg -i "+TEMP_FOLDER+"/input.mp4 2>&1"
-f = open(TEMP_FOLDER+"/params.txt", "w")
-subprocess.call(command, shell=True, stdout=f)
-
 
 
 sampleRate, audioData = wavfile.read(TEMP_FOLDER+"/audio.wav")
 audioSampleCount = audioData.shape[0]
 maxAudioVolume = getMaxVolume(audioData)
 
-f = open(TEMP_FOLDER+"/params.txt", 'r+')
-pre_params = f.read()
-f.close()
-params = pre_params.split('\n')
-for line in params:
-    m = re.search('Stream #.*Video.* ([0-9]*) fps',line)
-    if m is not None:
-        frameRate = float(m.group(1))
+if frameRate is None:
+    frameRate = getFrameRate(INPUT_FILE)
 
 samplesPerFrame = sampleRate/frameRate
 
@@ -145,8 +152,7 @@ for i in range(audioFrameCount):
 
 chunks.append([chunks[-1][1],audioFrameCount,shouldIncludeFrame[i-1]])
 chunks = chunks[1:]
-
-outputAudioData = np.zeros((0,audioData.shape[1]))
+outputAudioData = []#np.zeros((0,audioData.shape[1]))
 outputPointer = 0
 
 lastExistingFrame = None
@@ -163,19 +169,22 @@ for chunk in chunks:
     _, alteredAudioData = wavfile.read(eFile)
     leng = alteredAudioData.shape[0]
     endPointer = outputPointer+leng
-    outputAudioData = np.concatenate((outputAudioData,alteredAudioData/maxAudioVolume))
-
-    #outputAudioData[outputPointer:endPointer] = alteredAudioData/maxAudioVolume
-
-    # smooth out transitiion's audio by quickly fading in/out
+    outputAudioData.extend((alteredAudioData/maxAudioVolume).tolist())
     
+    #outputAudioData = np.concatenate((outputAudioData,alteredAudioData/maxAudioVolume))
+
+
+    """
+    # smooth out transitiion's audio by quickly fading in/out
     if leng < AUDIO_FADE_ENVELOPE_SIZE:
         outputAudioData[outputPointer:endPointer] = 0 # audio is less than 0.01 sec, let's just remove it.
+    
     else:
         premask = np.arange(AUDIO_FADE_ENVELOPE_SIZE)/AUDIO_FADE_ENVELOPE_SIZE
         mask = np.repeat(premask[:, np.newaxis],2,axis=1) # make the fade-envelope mask stereo
         outputAudioData[outputPointer:outputPointer+AUDIO_FADE_ENVELOPE_SIZE] *= mask
         outputAudioData[endPointer-AUDIO_FADE_ENVELOPE_SIZE:endPointer] *= 1-mask
+    """
 
     startOutputFrame = int(math.ceil(outputPointer/samplesPerFrame))
     endOutputFrame = int(math.ceil(endPointer/samplesPerFrame))
@@ -189,15 +198,11 @@ for chunk in chunks:
 
     outputPointer = endPointer
 
+outputAudioData =  np.asarray(outputAudioData)
 wavfile.write(TEMP_FOLDER+"/audioNew.wav",SAMPLE_RATE,outputAudioData)
 
-'''
-outputFrame = math.ceil(outputPointer/samplesPerFrame)
-for endGap in range(outputFrame,audioFrameCount):
-    copyFrame(int(audioSampleCount/samplesPerFrame)-1,endGap)
-'''
 
-command = "ffmpeg -framerate "+str(frameRate)+" -i "+TEMP_FOLDER+"/newFrame%06d.jpg -i "+TEMP_FOLDER+"/audioNew.wav -strict -2 "+OUTPUT_FILE
+command = f"ffmpeg -framerate {frameRate} -i {TEMP_FOLDER}/newFrame%06d.jpg -i {TEMP_FOLDER}/audioNew.wav -strict -2 -c:v libx264 -preset {H264_PRESET} -crf {H264_CRF} -pix_fmt yuvj420p {OUTPUT_FILE}"
 subprocess.call(command, shell=True)
 
 deletePath(TEMP_FOLDER)
