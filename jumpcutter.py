@@ -152,8 +152,10 @@ for i in range(audioFrameCount):
 
 chunks.append([chunks[-1][1],audioFrameCount,shouldIncludeFrame[i-1]])
 chunks = chunks[1:]
-outputAudioData = []#np.zeros((0,audioData.shape[1]))
+outputAudioData = []
 outputPointer = 0
+
+mask = [x/AUDIO_FADE_ENVELOPE_SIZE for x in range(AUDIO_FADE_ENVELOPE_SIZE)] # Create audio envelope mask
 
 lastExistingFrame = None
 for chunk in chunks:
@@ -170,21 +172,18 @@ for chunk in chunks:
     leng = alteredAudioData.shape[0]
     endPointer = outputPointer+leng
     outputAudioData.extend((alteredAudioData/maxAudioVolume).tolist())
-    
-    #outputAudioData = np.concatenate((outputAudioData,alteredAudioData/maxAudioVolume))
 
-
-    """
-    # smooth out transitiion's audio by quickly fading in/out
+    # Smoothing the audio
     if leng < AUDIO_FADE_ENVELOPE_SIZE:
-        outputAudioData[outputPointer:endPointer] = 0 # audio is less than 0.01 sec, let's just remove it.
-    
+        for i in range(outputPointer,endPointer):
+            outputAudioData[i] = 0
     else:
-        premask = np.arange(AUDIO_FADE_ENVELOPE_SIZE)/AUDIO_FADE_ENVELOPE_SIZE
-        mask = np.repeat(premask[:, np.newaxis],2,axis=1) # make the fade-envelope mask stereo
-        outputAudioData[outputPointer:outputPointer+AUDIO_FADE_ENVELOPE_SIZE] *= mask
-        outputAudioData[endPointer-AUDIO_FADE_ENVELOPE_SIZE:endPointer] *= 1-mask
-    """
+        for i in range(outputPointer,outputPointer+AUDIO_FADE_ENVELOPE_SIZE):
+            outputAudioData[i][0]*=mask[i-outputPointer]
+            outputAudioData[i][1]*=mask[i-outputPointer]
+        for i in range(endPointer-AUDIO_FADE_ENVELOPE_SIZE, endPointer):
+            outputAudioData[i][0]*=(1-mask[i-endPointer+AUDIO_FADE_ENVELOPE_SIZE])
+            outputAudioData[i][1]*=(1-mask[i-endPointer+AUDIO_FADE_ENVELOPE_SIZE])
 
     startOutputFrame = int(math.ceil(outputPointer/samplesPerFrame))
     endOutputFrame = int(math.ceil(endPointer/samplesPerFrame))
