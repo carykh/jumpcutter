@@ -1,5 +1,4 @@
 import subprocess
-from audiotsm import phasevocoder
 from audiotsm.io.wav import WavReader, WavWriter
 from scipy.io import wavfile
 import numpy as np
@@ -74,6 +73,7 @@ parser.add_argument('--frame_rate', type=float, help="frame rate of the input an
 parser.add_argument('--frame_quality', type=int, default=3, help="quality of frames to be extracted from input video. 1 is highest, 31 is lowest, 3 is the default.")
 parser.add_argument('--preset', type=str, default="medium", help="A preset is a collection of options that will provide a certain encoding speed to compression ratio. See https://trac.ffmpeg.org/wiki/Encode/H.264")
 parser.add_argument('--crf', type=int, default=23, help="Constant Rate Factor (CRF). Lower value - better quality but large filesize. See https://trac.ffmpeg.org/wiki/Encode/H.264")
+parser.add_argument('--stretch_algorithm', type=str, default="wsola", help="Sound stretching algorithm. 'phasevocoder' is best in general, but sounds phasy. 'wsola' may have a bit of wobble, but sounds better in many cases.")
 
 
 args = parser.parse_args()
@@ -93,6 +93,14 @@ URL = args.url
 FRAME_QUALITY = args.frame_quality
 H264_PRESET = args.preset
 H264_CRF = args.crf
+
+STRETCH_ALGORITHM = args.stretch_algorithm
+if(STRETCH_ALGORITHM == "phasevocoder"):
+    from audiotsm import phasevocoder as audio_stretch_algorithm
+elif (STRETCH_ALGORITHM == "wsola"):
+    from audiotsm import wsola as audio_stretch_algorithm
+else:
+    raise Exception("Unknown audio stretching algorithm.")
 
 assert INPUT_FILE != None , "why u put no input file, that dum"
 assert FRAME_QUALITY < 32 , "The max value for frame quality is 31."
@@ -165,7 +173,7 @@ for chunk in chunks:
     wavfile.write(sFile,SAMPLE_RATE,audioChunk)
     with WavReader(sFile) as reader:
         with WavWriter(eFile, reader.channels, reader.samplerate) as writer:
-            tsm = phasevocoder(reader.channels, speed=NEW_SPEED[int(chunk[2])])
+            tsm = audio_stretch_algorithm(reader.channels, speed=NEW_SPEED[int(chunk[2])])
             tsm.run(reader, writer)
     _, alteredAudioData = wavfile.read(eFile)
     leng = alteredAudioData.shape[0]
