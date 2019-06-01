@@ -30,7 +30,7 @@ def copyFrame(inputFrame,outputFrame):
         return False
     copyfile(src, dst)
     if outputFrame%20 == 19:
-        print(str(outputFrame+1)+" time-altered frames saved.")
+        print(str(outputFrame+1)+" time-altered frames saved.", end="\r")
     return True
 
 def inputToOutputFilename(filename):
