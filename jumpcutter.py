@@ -38,7 +38,7 @@ def copyFrame(inputFrame,outputFrame):
         return False
     copyfile(src, dst)
     if outputFrame%20 == 19:
-        print(str(outputFrame+1)+" time-altered frames saved.", end="\r")
+        print(str(outputFrame+1)+" time-altered frames saved.", end="\r", flush=True)
     return True
 
 def inputToOutputFilename(filename):
@@ -196,6 +196,8 @@ for chunk in chunks:
             copyFrame(lastExistingFrame,outputFrame)
 
     outputPointer = endPointer
+
+print()     # Print new line, after the same line was used to print the multiple "X time-altered frames saved" messages
 
 wavfile.write(TEMP_FOLDER+"/audioNew.wav",SAMPLE_RATE,outputAudioData)
 
