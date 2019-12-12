@@ -63,6 +63,7 @@ parser.add_argument('--frame_margin', type=float, default=1, help="some silent f
 parser.add_argument('--sample_rate', type=float, default=44100, help="sample rate of the input and output videos")
 parser.add_argument('--frame_rate', type=float, default=30, help="frame rate of the input and output videos. optional... I try to find it out myself, but it doesn't always work.")
 parser.add_argument('--frame_quality', type=int, default=3, help="quality of frames to be extracted from input video. 1 is highest, 31 is lowest, 3 is the default.")
+parser.add_argument('--ffmpeg_binary', type=str, default="ffmpeg", help="the ffmpeg binary, ffmpeg is the default.")
 
 args = parser.parse_args()
 
@@ -72,6 +73,7 @@ frameRate = args.frame_rate
 SAMPLE_RATE = args.sample_rate
 SILENT_THRESHOLD = args.silent_threshold
 FRAME_SPREADAGE = args.frame_margin
+FFMPEG_BINARY = args.ffmpeg_binary
 NEW_SPEED = [args.silent_speed, args.sounded_speed]
 if args.url != None:
     INPUT_FILE = downloadFile(args.url)
@@ -92,14 +94,14 @@ AUDIO_FADE_ENVELOPE_SIZE = 400 # smooth out transitiion's audio by quickly fadin
     
 createPath(TEMP_FOLDER)
 
-command = "ffmpeg -i "+INPUT_FILE+" -qscale:v "+str(FRAME_QUALITY)+" "+TEMP_FOLDER+"/frame%06d.jpg -hide_banner"
+command = FFMPEG_BINARY + " -i "+INPUT_FILE+" -qscale:v "+str(FRAME_QUALITY)+" "+TEMP_FOLDER+"/frame%06d.jpg -hide_banner"
 subprocess.call(command, shell=True)
 
-command = "ffmpeg -i "+INPUT_FILE+" -ab 160k -ac 2 -ar "+str(SAMPLE_RATE)+" -vn "+TEMP_FOLDER+"/audio.wav"
+command = FFMPEG_BINARY + " -i "+INPUT_FILE+" -ab 160k -ac 2 -ar "+str(SAMPLE_RATE)+" -vn "+TEMP_FOLDER+"/audio.wav"
 
 subprocess.call(command, shell=True)
 
-command = "ffmpeg -i "+TEMP_FOLDER+"/input.mp4 2>&1"
+command = FFMPEG_BINARY + " -i "+TEMP_FOLDER+"/input.mp4 2>&1"
 f = open(TEMP_FOLDER+"/params.txt", "w")
 subprocess.call(command, shell=True, stdout=f)
 
@@ -197,7 +199,7 @@ for endGap in range(outputFrame,audioFrameCount):
     copyFrame(int(audioSampleCount/samplesPerFrame)-1,endGap)
 '''
 
-command = "ffmpeg -framerate "+str(frameRate)+" -i "+TEMP_FOLDER+"/newFrame%06d.jpg -i "+TEMP_FOLDER+"/audioNew.wav -strict -2 "+OUTPUT_FILE
+command = FFMPEG_BINARY + " -framerate "+str(frameRate)+" -i "+TEMP_FOLDER+"/newFrame%06d.jpg -i "+TEMP_FOLDER+"/audioNew.wav -strict -2 "+OUTPUT_FILE
 subprocess.call(command, shell=True)
 
 deletePath(TEMP_FOLDER)
