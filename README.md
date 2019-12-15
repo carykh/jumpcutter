@@ -22,26 +22,26 @@ recommended this to me. However, my pyinstaller build did not work. :( HELP
 
 ## Install & run
 
-### With executeable
+#### With executeable
 
 - Download & extract [jumpcutter.zip](https://github.com/carykh/jumpcutter/files/3964820/jumpcutter.zip)
 - Open `cmd`
 - Run `C:\YOUR/PATH\jumpcutter.exe --input_file C:\YOUR\FILE.mp4 --sounded_speed 1 --silent_speed 99999 --frame_margin 2`
 
-### With python
+#### With python
 
 - Open cmd/terminal, and `cd` to the jumpcutter folder.
 - 'pip install -r requirements.txt'
 - Run: `python jumpcutter.py --input_file C:\YOUR\FILE.mp4 --sounded_speed 1 --silent_speed 99999 --frame_margin 2`
 
-### Install ffmpeg
+#### Install ffmpeg
 
 If you have no ffmpeg installed, follow these steps:
 
-#### Linux
+##### Linux
 
 `sudo apt-get install ffmpeg`
 
-#### Windows
+##### Windows
 
 [Read this guide](https://windowsloop.com/install-ffmpeg-windows-10/)
