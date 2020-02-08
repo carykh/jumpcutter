@@ -42,7 +42,7 @@ def createPath(s):
     try:  
         os.mkdir(s)
     except OSError:  
-        assert False, "Creation of the directory %s failed. (The TEMP folder may already exist. Delete or rename it, and try again.)"%repr(s)
+        raise FileExistsError("Creation of the directory %s failed. (The TEMP folder may already exist. Delete or rename it, and try again.) (If the jumpcutter failed, the folder probably still exists, so remove it manually)"%repr(s))
 
 def deletePath(s): # Dangerous! Watch out!
     try:  
@@ -93,27 +93,24 @@ createPath(TEMP_FOLDER)
 
 
 print('Importing the footage...')
-V=ffmpeg.input(INPUT_FILE).output(TEMP_FOLDER+"/audio.wav").run_async(quiet=1)
+V=ffmpeg.input(INPUT_FILE).output(TEMP_FOLDER+"/audio.wav", **{'loglevel':'warning', 'nostats':'-hide_banner'}).run_async()
 ffmpeg.input(INPUT_FILE).output(TEMP_FOLDER+"/frame%06d.jpg", **{'qscale:v': FRAME_QUALITY,'loglevel':'warning', 'stats':'-hide_banner'}).run()
 print('Image import finished...')
-
-sampleRate, audioData = wavfile.read(TEMP_FOLDER+"/audio.wav")
-
-audioSampleCount = audioData.shape[0]
-maxAudioVolume = getMaxVolume(audioData)
 
 probe = ffmpeg.probe(INPUT_FILE)
 video_info = next(x for x in probe['streams'] if x['codec_type'] == 'video')
 frameRate = int(video_info['r_frame_rate'].split('/')[0])/int(video_info['r_frame_rate'].split('/')[1])
 
-samplesPerFrame = sampleRate/frameRate
-audioFrameCount = int(math.ceil(audioSampleCount/samplesPerFrame))
-hasLoudAudio = np.zeros((audioFrameCount))
-
 V.wait()
 print('Footage imported')
 
+sampleRate, audioData = wavfile.read(TEMP_FOLDER+"/audio.wav")
 
+audioSampleCount = audioData.shape[0]
+maxAudioVolume = getMaxVolume(audioData)
+samplesPerFrame = sampleRate/frameRate
+audioFrameCount = int(math.ceil(audioSampleCount/samplesPerFrame))
+hasLoudAudio = np.zeros((audioFrameCount))
 
 for i in range(audioFrameCount):
     start = int(i*samplesPerFrame)
@@ -189,8 +186,8 @@ for endGap in range(outputFrame,audioFrameCount):
 print('\nExporting the footage...')
 video = ffmpeg.input(TEMP_FOLDER+"/newFrame*.jpg", pattern_type='glob', framerate=frameRate)
 audio = ffmpeg.input(TEMP_FOLDER+"/audioNew.wav")
-out = ffmpeg.output(video, audio, OUTPUT_FILE, **{'loglevel':'warning', 'stats':'-hide_banner'})
-out.run()
+out = ffmpeg.output(video, audio, OUTPUT_FILE, framerate=frameRate, **{'loglevel':'warning', 'stats':'-hide_banner'})
+out.run(quiet=0)
 
 print('Clean-up...')
 deletePath(TEMP_FOLDER)
