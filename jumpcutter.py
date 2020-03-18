@@ -90,7 +90,7 @@ else:
 TEMP_FOLDER = "TEMP"
 AUDIO_FADE_ENVELOPE_SIZE = 400 # smooth out transitiion's audio by quickly fading in/out (arbitrary magic number whatever)
     
-if(os.path.exists(TEMP_FOLDER)):   # test if the TEMP folder exists, when it does, delete it. Prevent the error when creating TEMP while the TEMP already exists
+if(os.path.exists(TEMP_FOLDER)):
     deletePath(TEMP_FOLDER)
 
 createPath(TEMP_FOLDER)
