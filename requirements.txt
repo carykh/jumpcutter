@@ -3,3 +3,4 @@ audiotsm
 scipy
 numpy
 pytube3
+srt
