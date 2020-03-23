@@ -304,16 +304,18 @@ if re.match('.+srt', args.input_subtitle):
         
         # note that the key_word[0] is cut keyword
         if re.match( '(%s)' % (key_word[0]), subtitleKeywordLists[i].content):
+            
             while q < len(chunks):
-                if chunks[q][1] < lastEnd :
+                print(str(chunks[q]))
+                if chunks[q][1] <= lastEnd :
                     print('这个 chunk  %s 到 %s 在在 cut 区间  %s 到 %s  左侧，下一个 chunk' % (chunks[q][0],chunks[q][1],thisStart,thisEnd))
                     q += 1
                     continue
-                elif chunks[q][0] > thisEnd :
+                elif chunks[q][0] >= thisEnd :
                     print('这个 chunk  %s 到 %s 在在 cut 区间  %s 到 %s  右侧，下一个区间' % (chunks[q][0],chunks[q][1],thisStart,thisEnd))
                     q += 1
                     break
-                elif chunks[q][1] < thisEnd :
+                elif chunks[q][1] <= thisEnd :
                     print(str(chunks[q][1]) +" < "+ str(thisEnd))
                     print("这个chunk 的右侧 %s 小于区间的终点  %s ，删掉" % (chunks[q][1],thisEnd))
                     del chunks[q]
@@ -324,23 +326,24 @@ if re.match('.+srt', args.input_subtitle):
         # key_word[1] is save keyword
         elif re.match( '(%s)' % (key_word[1]), subtitleKeywordLists[i].content):
             while q < len(chunks) :
-                if chunks[q][1] < thisStart :
+                print(str(chunks[q]))
+                if chunks[q][1] <= thisStart :
                     print("这个区间 %s 到 %s 在起点 %s 左侧，放过，下一个 chunk" % (chunks[q][0], chunks[q][1], thisStart))
                     q += 1
                     continue
-                elif chunks[q][0] > thisEnd :
+                elif chunks[q][0] >= thisEnd :
                     print('这个 chunk  %s 到 %s 在在 cut 区间  %s 到 %s  右侧，下一个区间' % (chunks[q][0],chunks[q][1],thisStart,thisEnd))
                     q += 1
                     break
-                elif chunks[q][1] > thisStart and chunks[q][0] < thisStart :
+                elif chunks[q][1] > thisStart and chunks[q][0] <= thisStart :
                     print("这个区间 %s 到 %s 的右侧，在起点 %s 和终点 %s 之间，修改区间右侧为 %s " % (chunks[q][0], chunks[q][1], thisStart, thisEnd, thisStart))
                     chunks[q][1] = thisStart
                     q += 1
-                elif chunks[q][0] > thisStart and chunks[q][1] > thisEnd :
+                elif chunks[q][0] >= thisStart and chunks[q][1] > thisEnd :
                     print("这个区间 %s 到 %s 的左侧，在起点 %s 和终点 %s 之间，修改区间左侧为 %s " % (chunks[q][0], chunks[q][1], thisStart, thisEnd, thisEnd))
                     chunks[q][0] = thisEnd
                     q += 1
-                elif chunks[q][0] > thisStart and chunks[q][1] < thisEnd :
+                elif chunks[q][0] >= thisStart and chunks[q][1] <= thisEnd :
                     print("这个区间 %s 到 %s 整个在起点 %s 和终点 %s 之间，删除 " % (chunks[q][0], chunks[q][1], thisStart, thisEnd))
                     del chunks[q]
                 elif chunks[q][0] < thisStart and chunks[q][1] > thisEnd :
