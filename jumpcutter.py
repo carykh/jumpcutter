@@ -318,7 +318,7 @@ if re.match('.+srt', args.input_subtitle):
                     print("这个chunk 的右侧 %s 小于区间的终点  %s ，删掉" % (chunks[q][1],thisEnd))
                     del chunks[q]
                 elif chunks[q][1] > thisEnd :
-                    print("这个chunk 的右侧 %s 大于区间的终点 %s ，把它的左侧 %s 改成本区间的终点 %s " % (chunks[q][1],thisEnd,chunks[q][0].thisEnd))
+                    print("这个chunk 的右侧 %s 大于区间的终点 %s ，把它的左侧 %s 改成本区间的终点 %s " % (chunks[q][1],thisEnd,chunks[q][0],thisEnd))
                     chunks[q][0] = thisEnd
                     q += 1
         # key_word[1] is save keyword
