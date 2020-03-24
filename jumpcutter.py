@@ -97,9 +97,9 @@ parser = argparse.ArgumentParser(description='''
 
 --input_subtitle SUBTITLE    如果要依据字幕来自动剪辑，就输入字幕文件路径，要求 srt 字幕
 
---cutKeyword    字幕中的关键字，这是切除片段的关键词。默认是“切掉”
+--cut_keyword    字幕中的关键字，这是切除片段的关键词。默认是“切掉”
 
---saveKeyword    字幕中的关键字，这是保留片段的关键词。默认是“保留”
+--save_keyword    字幕中的关键字，这是保留片段的关键词。默认是“保留”
 
 --output_file    输出视频文件路径，可选，如果没有选这个，会有默认自动的输出文件名
 
@@ -130,7 +130,7 @@ Above are Chinese help info. English Help is here:
 Apply different speed to the sounded and silenced part of the video, and it can auto cut and save clips based on the keywords within a srt subtitle file. 
 
 For example: 
-python jumpcutter.py --input_file "my_vlog.mp4" --input_subtitle "my_vlog.srt" --cutKeyword "Cut it" --saveKeyword "Save it" --frame_margin 2 --silent_speed 999
+python jumpcutter.py --input_file "my_vlog.mp4" --input_subtitle "my_vlog.srt" --cut_keyword "Cut it" --save_keyword "Save it" --frame_margin 2 --silent_speed 999
 
 You can goto https://www.youtube.com/watch?v=DQ8orIurGxw to see the basic mechanism. 
 
@@ -149,8 +149,8 @@ The false is that this method requires an auto generated srt subtitle. But I bel
 parser.add_argument('--input_file', type=str,  help='the video file you want modified')
 parser.add_argument('--url', type=str, help='A youtube url to download and process')
 parser.add_argument('--input_subtitle', type=str,default="", help='If you want to autocut the video base on the key words within the srt subtitle, then give it the srt path')
-parser.add_argument('--cutKeyword', type=str,default="切掉", help='the keyword which indicates cut and drop the previous clip. Only when the whole subtitle exactly matches the key word, then it can work.  The default is "切掉" . If you are a non-Chinese speaker, you may want to change it into eg."Cut it".')
-parser.add_argument('--saveKeyword', type=str,default="保留", help='the keyword which indicates to save the previous clip. Only when the whole subtitle exactly matches the key word, then it can work.  The default is "保留" . If you are a non-Chinese speaker, you may want to change it into eg."Save it".')
+parser.add_argument('--cut_keyword', type=str,default="切掉", help='the keyword which indicates cut and drop the previous clip. Only when the whole subtitle exactly matches the key word, then it can work.  The default is "切掉" . If you are a non-Chinese speaker, you may want to change it into eg."Cut it".')
+parser.add_argument('--save_keyword', type=str,default="保留", help='the keyword which indicates to save the previous clip. Only when the whole subtitle exactly matches the key word, then it can work.  The default is "保留" . If you are a non-Chinese speaker, you may want to change it into eg."Save it".')
 parser.add_argument('--output_file', type=str, default="", help="the output file. (optional. if not included, it'll just modify the input file name)")
 parser.add_argument('--silent_threshold', type=float, default=0.03, help="the volume amount that frames' audio needs to surpass to be consider \"sounded\". It ranges from 0 (silence) to 1 (max volume)")
 parser.add_argument('--sounded_speed', type=float, default=1.00, help="the speed that sounded (spoken) frames should be played at. Typically 1.")
@@ -168,7 +168,7 @@ SILENT_THRESHOLD = args.silent_threshold
 FRAME_SPREADAGE = args.frame_margin
 NEW_SPEED = [args.silent_speed, args.sounded_speed]
 # the two keyword in the subtitle indicates to save the clip or cut it away, they have default values
-key_word = [args.cutKeyword, args.saveKeyword]
+key_word = [args.cut_keyword, args.save_keyword]
 
 
 
@@ -296,9 +296,9 @@ if re.match('.+srt', args.input_subtitle):
         q -= 2
         print(str(subtitleKeywordLists[i]))
         if i > 0 :
-            lastEnd = int((subtitleKeywordLists[i-1].end.seconds + subtitleKeywordLists[i-1].end.microseconds / 1000000) * frameRate)
-        thisStart = int((subtitleKeywordLists[i].start.seconds + subtitleKeywordLists[i].start.microseconds / 1000000) * frameRate)
-        thisEnd = int((subtitleKeywordLists[i].end.seconds + subtitleKeywordLists[i].end.microseconds / 1000000) * frameRate)
+            lastEnd = int((subtitleKeywordLists[i-1].end.seconds + subtitleKeywordLists[i-1].end.microseconds / 1000000) * frameRate) + 10
+        thisStart = int((subtitleKeywordLists[i].start.seconds + subtitleKeywordLists[i].start.microseconds / 1000000) * frameRate) - 4
+        thisEnd = int((subtitleKeywordLists[i].end.seconds + subtitleKeywordLists[i].end.microseconds / 1000000) * frameRate) + 10
         print("\n\n\nlastEnd:" + str(lastEnd))
         print("\n\n\n这是区间是: " + str(thisStart) + " 到 " + str(thisEnd))
         
