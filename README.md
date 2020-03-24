@@ -24,9 +24,9 @@ ArcTime 提供便宜的音频转字幕功能，但是开源的 [VideoSRT](https:
 
 --input_subtitle SUBTITLE    如果要依据字幕来自动剪辑，就输入字幕文件路径，要求 srt 字幕
 
---cutKeyword    字幕中的关键字，这是切除片段的关键词。默认是“切掉”
+--cut_keyword    字幕中的关键字，这是切除片段的关键词。默认是“切掉”
 
---saveKeyword    字幕中的关键字，这是保留片段的关键词。默认是“保留”
+--save_keyword    字幕中的关键字，这是保留片段的关键词。默认是“保留”
 
 --output_file    输出视频文件路径，可选，如果没有选这个，会有默认自动的输出文件名
 
@@ -70,22 +70,10 @@ python jumpcutter.py --input_file "我的vlog.mp4" --input_subtitle "我的vlog.
 
 Apply different speed to the sounded and silenced part of the video, and it can auto cut and save clips based on the keywords within a srt subtitle file. 
 
-It is derived from jumpcutter by CaryKH, and I personally made some fix: 
-
-- It now can auto detect the frame rate of your video
-
-- it now supports paths which includes spaces or any other special symbol
-
-- It now can process long videos without worrying the memory issue.( Originally all the raw audio data are stored in the memory with float64 type, if your video is longer more than 15min, it could fail because in lack of memory. Now I save each piece of audio into a wav file, stored in the TEMP folder, then I use FFmpeg concat to stick them together.)
-
-- KaryKH originally copy the input frame to a new frame, now I just rename the input frame to the new frame, so disk spaces are saved a little bit.
-
-- A new feature is added: auto cut, discard or remain te clip according to the keyword in a srt subtitle file. The mechanism is similar to KaryKH's idea which use thumb up and thumb down to auto cut the video. But recognizing gesture in a video is hard to implement, so I used the keyword in the subtitle as the mark to decide whether to discard or save the clip.
-
 For example: 
 
 ```
-python jumpcutter.py --input_file "my_vlog.mp4" --input_subtitle "my_vlog.srt" --cutKeyword "Cut it" --saveKeyword "Save it" --frame_margin 2 --silent_speed 999
+python jumpcutter.py --input_file "my_vlog.mp4" --input_subtitle "my_vlog.srt" --cut_keyword "Cut it" --save_keyword "Save it" --frame_margin 2 --silent_speed 999
 ```
 
 You can goto https://www.youtube.com/watch?v=DQ8orIurGxw to see the basic mechanism. 
