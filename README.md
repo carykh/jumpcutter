@@ -70,6 +70,18 @@ python jumpcutter.py --input_file "我的vlog.mp4" --input_subtitle "我的vlog.
 
 Apply different speed to the sounded and silenced part of the video, and it can auto cut and save clips based on the keywords within a srt subtitle file. 
 
+It is derived from jumpcutter by CaryKH, and I personally made some fix: 
+
+- It now can auto detect the frame rate of your video
+
+- it now supports paths which includes spaces or any other special symbol
+
+- It now can process long videos without worrying the memory issue.( Originally all the raw audio data are stored in the memory with float64 type, if your video is longer more than 15min, it could fail because in lack of memory. Now I save each piece of audio into a wav file, stored in the TEMP folder, then I use FFmpeg concat to stick them together.)
+
+- KaryKH originally copy the input frame to a new frame, now I just rename the input frame to the new frame, so disk spaces are saved a little bit.
+
+- A new feature is added: auto cut, discard or remain te clip according to the keyword in a srt subtitle file. The mechanism is similar to KaryKH's idea which use thumb up and thumb down to auto cut the video. But recognizing gesture in a video is hard to implement, so I used the keyword in the subtitle as the mark to decide whether to discard or save the clip.
+
 For example: 
 
 ```
