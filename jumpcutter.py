@@ -50,7 +50,7 @@ def getMaxVolume(s):
 def copyFrame(inputFrame,outputFrame):
     src = TEMP_FOLDER+"/frame{:06d}".format(inputFrame+1)+".jpg"
     dst = TEMP_FOLDER+"/newFrame{:06d}".format(outputFrame+1)+".jpg"
-    if not os.path.isfile(src):
+    if not os.path.isfile(str(src)):
         return False
     if outputFrame%20 == 19:
         print(str(outputFrame+1)+" time-altered frames saved.")
@@ -64,7 +64,7 @@ def inputToOutputFilename(filename):
 
 #创建临时文件夹
 def createPath(s):
-    #assert (not os.path.exists(s)), "The filepath "+s+" already exists. Don't want to overwrite it. Aborting."
+    assert (not os.path.exists(s)), "The filepath "+s+" already exists. Don't want to overwrite it. Aborting."
 
     try:  
         os.mkdir(s)
@@ -91,7 +91,7 @@ parser = argparse.ArgumentParser(description='''
 
 下面是选项的帮助：
 
---input_file INPUTFILE    指定一个输入的视频文件
+--input_file inputFILE    指定一个输入的视频文件
 
 --url URL    如果要处理的输入文件是一个 YouTube 在线视频，就用这个选项，输入 URL 
 
@@ -156,7 +156,7 @@ parser.add_argument('--silent_threshold', type=float, default=0.03, help="the vo
 parser.add_argument('--sounded_speed', type=float, default=1.00, help="the speed that sounded (spoken) frames should be played at. Typically 1.")
 parser.add_argument('--silent_speed', type=float, default=5.00, help="the speed that silent frames should be played at. 999999 for jumpcutting.")
 parser.add_argument('--frame_margin', type=float, default=1, help="some silent frames adjacent to sounded frames are included to provide context. How many frames on either the side of speech should be included? That's this variable.")
-parser.add_argument('--sample_rate', type=float, default=44100, help="sample rate of the input and output videos, the default value is 44100 , so if your audio stream sample rate differs from this, you will need to set this")
+parser.add_argument('--sample_rate', type=int, default=44100, help="sample rate of the input and output videos, the default value is 44100 , so if your audio stream sample rate differs from this, you will need to set this")
 parser.add_argument('--frame_rate', type=float, default=30, help="frame rate of the input and output videos. optional... actually it can auto get your frame rate, so you can leave this option")
 parser.add_argument('--frame_quality', type=int, default=3, help="quality of frames to be extracted from input video. 1 is highest, 31 is lowest, 3 is the default.")
 
@@ -175,20 +175,20 @@ key_word = [args.cut_keyword, args.save_keyword]
 
 #如果 URL 不为空，就代表有下载链接，先把它下下来，再得到文件名
 if args.url != None:
-    INPUT_FILE = downloadFile(args.url)
+    input_FILE = downloadFile(args.url)
 else:
-    INPUT_FILE = args.input_file
+    input_FILE = args.input_file
 URL = args.url
 FRAME_QUALITY = args.frame_quality
 
 #断言有输入文件，否则提示
-assert INPUT_FILE != None , "没有收到输入文件呀！\n No input file received, could you please check again?"
+assert input_FILE != None , "没有收到输入文件呀！\n No input file received, could you please check again?"
 
 #如果有输出文件，就用输出文件，如果没有，就用默认的输出文件
 if len(args.output_file) >= 1:
     OUTPUT_FILE = args.output_file
 else:
-    OUTPUT_FILE = inputToOutputFilename(INPUT_FILE)
+    OUTPUT_FILE = inputToOutputFilename(input_FILE)
 
 #临时文件夹名字
 TEMP_FOLDER = "TEMP"
@@ -205,13 +205,19 @@ if(os.path.exists(TEMP_FOLDER)):
 createPath(TEMP_FOLDER)
 
 #提取帧 frame%06d.jpg
-command = ["ffmpeg","-hide_banner","-i",INPUT_FILE,"-qscale:v",str(FRAME_QUALITY),TEMP_FOLDER+"/frame%06d.jpg","-hide_banner"]
+#command = ["ffmpeg","-hide_banner","-i",input_FILE,"-qscale:v",str(FRAME_QUALITY),TEMP_FOLDER+"/frame%06d.jpg","-hide_banner"]
+command = 'ffmpeg -hide_banner -i "%s" -qscale:v %s %s/frame%s' % (input_FILE,FRAME_QUALITY,TEMP_FOLDER,"%06d.jpg")
+#input(command)
 subprocess.call(command, shell=True)
 
 #提取音频流 audio.wav
-command = ["ffmpeg","-hide_banner","-i",INPUT_FILE,"-ab","160k","-ac","2","-ar",str(SAMPLE_RATE),"-vn",TEMP_FOLDER+"/audio.wav"]
+#command = ["ffmpeg","-hide_banner","-i",input_FILE,"-ab","160k","-ac","2","-ar",str(SAMPLE_RATE),"-vn",TEMP_FOLDER+"/audio.wav"]
+command = 'ffmpeg -hide_banner -i "%s" -ab 160k -ac 2 -ar %s -vn %s/audio.wav' % (input_FILE, SAMPLE_RATE, TEMP_FOLDER)
+#input(command)
 subprocess.call(command, shell=True)
-command = ["ffmpeg","-hide_banner","-i",INPUT_FILE,"2>&1"]
+
+command = 'ffmpeg -hide_banner -i "%s"' % (input_FILE)
+#input(command)
 f = open(TEMP_FOLDER+"/params.txt", "w")
 subprocess.call(command, shell=True, stdout=f)
 
@@ -439,11 +445,14 @@ for endGap in range(outputFrame,audioFrameCount):
     copyFrame(int(audioSampleCount/samplesPerFrame)-1,endGap)
 '''
 print("\n\n\n\n\n\n\n现在开始合并音频\nStarting concaenating audio clips\n\n\n\n\n\n\n\n\n")
-command = ["ffmpeg","-y","-hide_banner","-safe","0","-f","concat","-i",TEMP_FOLDER+"/concat.txt","-framerate",str(frameRate),TEMP_FOLDER+"/audioNew.wav"]
+#command = ["ffmpeg","-y","-hide_banner","-safe","0","-f","concat","-i",TEMP_FOLDER+"/concat.txt","-framerate",str(frameRate),TEMP_FOLDER+"/audioNew.wav"]
+command = 'ffmpeg -y -hide_banner -safe 0 -f concat -i %s/concat.txt -framerate %s %s/audioNew.wav' % (TEMP_FOLDER, frameRate, TEMP_FOLDER)
 subprocess.call(command, shell=True)
 
 print("\n\n\n\n\n\n\n现在开始合并音视频\nStarting merging audio and video stream\n\n\n\n\n\n\n\n\n")
-command = ["ffmpeg","-y","-hide_banner","-framerate",str(frameRate),"-i",TEMP_FOLDER+"/newFrame%06d.jpg","-i",TEMP_FOLDER+"/audioNew.wav","-strict","-2",OUTPUT_FILE]
+#command = ["ffmpeg","-y","-hide_banner","-framerate",str(frameRate),"-i",TEMP_FOLDER+"/newFrame%06d.jpg","-i",TEMP_FOLDER+"/audioNew.wav","-strict","-2",OUTPUT_FILE]
+command = 'ffmpeg -y -hide_banner -framerate %s -i %s/newFrame%s -i %s/audioNew.wav -strict -2 "%s"' % (frameRate, TEMP_FOLDER, "%06d.jpg", TEMP_FOLDER, OUTPUT_FILE)
+#input(command)
 subprocess.call(command, shell=True)
 
 deletePath(TEMP_FOLDER)
