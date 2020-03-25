@@ -2,4 +2,5 @@ Pillow
 audiotsm
 scipy
 numpy
-pytube
+pytube3
+srt
