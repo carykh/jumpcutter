@@ -19,3 +19,9 @@ recommended this to me. However, my pyinstaller build did not work. :( HELP
 
 ## Building with nix
 `nix-build` to get a script with all the libraries and ffmpeg, `nix-build -A bundle` to get a single binary.
+
+## Troubleshooting
+
+- If the video is long you might need a lot of RAM and the x64 version of Python3
+- If you have problems installing ffmpeg on Windows follow this link http://blog.gregzaal.com/how-to-install-ffmpeg-on-windows/ (alternative if you are lazy just put the jumpcutter.exe in the same folder)
+- try not having spaces in the names of files/folders
