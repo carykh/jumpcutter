@@ -1,4 +1,3 @@
-pkinter
 Pillow
 audiotsm
 scipy

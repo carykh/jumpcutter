@@ -93,10 +93,3 @@ ENV/
 *.iml
 out
 gen
-
-# NSIS files
-*.exe
-
-# Other weird files
-*.spec
-TEMP
