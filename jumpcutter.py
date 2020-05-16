@@ -97,8 +97,7 @@ else:
     OUTPUT_FILE = inputToOutputFilename(INPUT_FILE)
 
 TEMP_FOLDER = "TEMP"
-AUDIO_FADE_ENVELOPE_SIZE = 400  # smooth out transitiion's audio by quickly fading in/out (arbitrary magic number
-# whatever)
+AUDIO_FADE_ENVELOPE_SIZE = 400  # smooth out transitiion's audio by quickly fading in/out (arbitrary magic number whatever)
 
 createPath(TEMP_FOLDER)
 
