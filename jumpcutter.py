@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from contextlib import closing
 from PIL import Image
 import subprocess
@@ -10,13 +11,13 @@ import math
 from shutil import copyfile, rmtree
 import os
 import argparse
-from pytube import YouTube
+import youtube_dl
 
 def downloadFile(url):
-    name = YouTube(url).streams.first().download()
-    newname = name.replace(' ','_')
-    os.rename(name,newname)
-    return newname
+    with youtube_dl.YoutubeDL() as ytdl:
+        info = ytdl.extract_info(url)
+        title = ytdl.prepare_filename(info)
+    return title
 
 def getMaxVolume(s):
     maxv = float(np.max(s))
