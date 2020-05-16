@@ -1,4 +1,3 @@
-Pillow
 audiotsm
 scipy
 numpy
