@@ -32,7 +32,7 @@ def copyFrame(inputFrame, outputFrame):
         return False
     copyfile(src, dst)
     if outputFrame % 20 == 19:
-        print("\r" + str(outputFrame + 1) + " time-altered frames saved.", end="", flush=True)
+        print(str(outputFrame + 1) + " time-altered frames saved.", end="\r", flush=True)
     return True
 
 
@@ -186,7 +186,6 @@ for chunk in chunks:
             copyFrame(lastExistingFrame, outputFrame)
 
     outputPointer = endPointer
-print()
 
 wavfile.write(TEMP_FOLDER + "/audioNew.wav", SAMPLE_RATE, outputAudioData)
 
