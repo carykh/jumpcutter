@@ -10,8 +10,18 @@ import argparse
 try:
     from pytube import YouTube
 
+    def downloadFile(url):
+        name = YouTube(url).streams.first().download()
+        return name
+
+except ImportError:
+    import youtube_dl
 
 
+    def downloadFile(url):
+        with youtube_dl.YoutubeDL() as ytdl:
+            info = ytdl.extract_info(url)
+            return ytdl.prepare_filename(info)
 
 
 def getMaxVolume(s):
