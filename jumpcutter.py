@@ -1,10 +1,8 @@
-from __future__ import unicode_literals
 import subprocess
 from audiotsm import phasevocoder
 from audiotsm.io.wav import WavReader, WavWriter
 from scipy.io import wavfile
 import numpy as np
-import re
 import math
 from shutil import copyfile, rmtree
 import os
@@ -36,23 +34,20 @@ def copyFrame(inputFrame, outputFrame):
     return True
 
 
-def inputToOutputFilename(filename):
+def inputToOutputFilename(filename, formats=None):
     dotIndex = filename.rfind(".")
-    return filename[:dotIndex] + "_ALTERED" + filename[dotIndex:]
+    return filename[:dotIndex] + "_ALTERED" + (filename[dotIndex:] if formats is None or formats == "" else formats if "." in formats else "." + formats)
 
 
 def createPath(s):
     # assert (not os.path.exists(s)), "The filepath "+s+" already exists. Don't want to overwrite it. Aborting."
 
     try:
+        if os.path.exists("TEMP"):
+            deletePath(s)
         os.mkdir(s)
     except OSError:
-        try:
-            if os.path.exists("TEMP"):
-                deletePath(s)
-                os.mkdir(s)
-        except OSError:
-            assert False, "Creation of the directory %s failed. (The TEMP folder may already exist. Delete or rename it, and try again.)"
+        assert False, "Creation of the directory %s failed. (The TEMP folder may already exist. Delete or rename it, and try again.)"
 
 
 def deletePath(s):  # Dangerous! Watch out!
@@ -65,14 +60,15 @@ def deletePath(s):  # Dangerous! Watch out!
 
 parser = argparse.ArgumentParser(description='Modifies a video file to play at different speeds when there is sound vs. silence.')
 parser.add_argument('-i', '--input_file', type=str, help='the video file you want modified')
-parser.add_argument('-u', '--url', type=str, help='A youtube url to download and process')
-parser.add_argument('-o', '--output_file', type=str, default="", help="the output file. (optional. if not included, it'll just modify the input file name)")
+parser.add_argument('-u', '--url', type=str, help='A youtube video url to download and process')
+parser.add_argument('-o', '--output_file', type=str, default="", help="the output file. (optional. if not included, it'll just modify the input file name, overwrites output_format)")
+parser.add_argument('-O', '--output_format', type=str, default="", help="format of output video (optional. if not included uses input)")
 parser.add_argument('--silent_threshold', type=float, default=0.03, help="the volume amount that frames' audio needs to surpass to be consider \"sounded\". It ranges from 0 (silence) to 1 (max volume)")
 parser.add_argument('-S', '--sounded_speed', type=float, default=1.00, help="the speed that sounded (spoken) frames should be played at. Typically 1.")
 parser.add_argument('-s', '--silent_speed', type=float, default=5.00, help="the speed that silent frames should be played at. 999999 for jumpcutting.")
 parser.add_argument('--frame_margin', type=float, default=1, help="some silent frames adjacent to sounded frames are included to provide context. How many frames on either the side of speech should be included? That's this variable.")
 parser.add_argument('--sample_rate', type=float, default=44100, help="sample rate of the input and output videos")
-parser.add_argument('-fps', '--frame_rate', type=float, default=30, help="frame rate of the input and output videos. optional... I try to find it out myself, but it doesn't always work.")
+parser.add_argument('-fps', '--frame_rate', type=float, default=0, help="frame rate of the input and output videos. optional... I try to find it out myself, but it doesn't always work.")
 parser.add_argument('-q', '--frame_quality', type=int, default=3, help="quality of frames to be extracted from input video. 1 is highest, 31 is lowest, 3 is the default.")
 
 args = parser.parse_args()
@@ -83,17 +79,18 @@ SILENT_THRESHOLD = args.silent_threshold
 FRAME_SPREADAGE = args.frame_margin
 NEW_SPEED = [args.silent_speed, args.sounded_speed]
 INPUT_FILE = downloadFile(args.url) if args.url is not None else args.input_file
-URL = args.url
+OUTPUT_FORMAT = args.output_format
 FRAME_QUALITY = args.frame_quality
 
 assert INPUT_FILE is not None, "why u put no input file, that dum"
 
-OUTPUT_FILE = args.output_file if len(args.output_file) >= 1 else inputToOutputFilename(INPUT_FILE)
+OUTPUT_FILE = args.output_file if args.output_file else inputToOutputFilename(INPUT_FILE, OUTPUT_FORMAT)
 
 TEMP_FOLDER = "TEMP"
-AUDIO_FADE_ENVELOPE_SIZE = 400  # smooth out transitiion's audio by quickly fading in/out (arbitrary magic number whatever)
+AUDIO_FADE_ENVELOPE_SIZE = 400  # smooth out transition's audio by quickly fading in/out (arbitrary magic number whatever)
 
 createPath(TEMP_FOLDER)
+
 
 command = "ffmpeg -i \"" + INPUT_FILE + "\" -qscale:v " + str(FRAME_QUALITY) + " " + TEMP_FOLDER + "/frame%06d.jpg -hide_banner"
 subprocess.run(command, shell=True, check=True)
@@ -101,22 +98,14 @@ subprocess.run(command, shell=True, check=True)
 command = "ffmpeg -i \"" + INPUT_FILE + "\" -ab 160k -ac 2 -ar " + str(SAMPLE_RATE) + " -vn " + TEMP_FOLDER + "/audio.wav"
 subprocess.run(command, shell=True, check=True)
 
-command = "ffmpeg -i " + TEMP_FOLDER + "/input.mp4 2>&1"
-f = open(TEMP_FOLDER + "/params.txt", "w")
-subprocess.run(command, shell=True, stdout=f)
+command = "ffprobe -v quiet -select_streams v -of default=noprint_wrappers=1:nokey=1 -show_entries stream=r_frame_rate \"" + INPUT_FILE + "\""
+subprocess.run(command, shell=True, stdout=open(TEMP_FOLDER + "/fps.txt", "w"))
+frameRate = float(open(TEMP_FOLDER + "/fps.txt").read().replace("/1\n", "")) if frameRate <= 0 else frameRate
+assert frameRate <= 0, "impossible framerate of " + frameRate + ", check your options or video (0 and below)"
 
 sampleRate, audioData = wavfile.read(TEMP_FOLDER + "/audio.wav")
 audioSampleCount = audioData.shape[0]
 maxAudioVolume = getMaxVolume(audioData)
-
-f = open(TEMP_FOLDER + "/params.txt", 'r+')
-pre_params = f.read()
-f.close()
-params = pre_params.split('\n')
-for line in params:
-    m = re.search('Stream #.*Video.* ([0-9]*) fps', line)
-    if m is not None:
-        frameRate = float(m.group(1))
 
 samplesPerFrame = sampleRate / frameRate
 
@@ -156,8 +145,7 @@ for chunk in chunks:
     wavfile.write(sFile, SAMPLE_RATE, audioChunk)
     with WavReader(sFile) as reader:
         with WavWriter(eFile, reader.channels, reader.samplerate) as writer:
-            tsm = phasevocoder(reader.channels, speed=NEW_SPEED[int(chunk[2])])
-            tsm.run(reader, writer)
+            phasevocoder(reader.channels, speed=NEW_SPEED[int(chunk[2])]).run(reader, writer)
     _, alteredAudioData = wavfile.read(eFile)
     leng = alteredAudioData.shape[0]
     endPointer = outputPointer + leng
@@ -165,7 +153,7 @@ for chunk in chunks:
 
     # outputAudioData[outputPointer:endPointer] = alteredAudioData/maxAudioVolume
 
-    # smooth out transitiion's audio by quickly fading in/out
+    # smooth out transition's audio by quickly fading in/out
 
     if leng < AUDIO_FADE_ENVELOPE_SIZE:
         outputAudioData[outputPointer:endPointer] = 0  # audio is less than 0.01 sec, let's just remove it.
