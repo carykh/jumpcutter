@@ -1,4 +1,6 @@
 audiotsm
 scipy
 numpy
+argparse
+pytube
 youtube-dl
