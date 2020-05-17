@@ -7,14 +7,21 @@ import math
 from shutil import copyfile, rmtree
 import os
 import argparse
-import youtube_dl
+try:
+    from pytube import YouTube
 
 
-def downloadFile(url):
-    with youtube_dl.YoutubeDL() as ytdl:
-        info = ytdl.extract_info(url)
-        title = ytdl.prepare_filename(info)
-    return title
+    def downloadFile(url):
+        name = YouTube(url).streams.first().download()
+        return name
+except ImportError:
+    import youtube_dl
+
+
+    def downloadFile(url):
+        with youtube_dl.YoutubeDL() as ytdl:
+            info = ytdl.extract_info(url)
+            return ytdl.prepare_filename(info)
 
 
 def getMaxVolume(s):
@@ -91,7 +98,6 @@ AUDIO_FADE_ENVELOPE_SIZE = 400  # smooth out transition's audio by quickly fadin
 
 createPath(TEMP_FOLDER)
 
-
 command = "ffmpeg -i \"" + INPUT_FILE + "\" -qscale:v " + str(FRAME_QUALITY) + " " + TEMP_FOLDER + "/frame%06d.jpg -hide_banner"
 subprocess.run(command, shell=True, check=True)
 
@@ -101,7 +107,8 @@ subprocess.run(command, shell=True, check=True)
 command = "ffprobe -v quiet -select_streams v -of default=noprint_wrappers=1:nokey=1 -show_entries stream=r_frame_rate \"" + INPUT_FILE + "\""
 subprocess.run(command, shell=True, stdout=open(TEMP_FOLDER + "/fps.txt", "w"))
 frameRate = float(open(TEMP_FOLDER + "/fps.txt").read().replace("/1\n", "")) if frameRate <= 0 else frameRate
-assert frameRate <= 0, "impossible framerate of " + frameRate + ", check your options or video (0 and below)"
+assert frameRate <= 0, "impossible framerate of {}, check your options or video (0 and below)".format(frameRate)
+
 
 sampleRate, audioData = wavfile.read(TEMP_FOLDER + "/audio.wav")
 audioSampleCount = audioData.shape[0]
