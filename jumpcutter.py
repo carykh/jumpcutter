@@ -11,17 +11,7 @@ try:
     from pytube import YouTube
 
 
-    def downloadFile(url):
-        name = YouTube(url).streams.first().download()
-        return name
-except ImportError:
-    import youtube_dl
 
-
-    def downloadFile(url):
-        with youtube_dl.YoutubeDL() as ytdl:
-            info = ytdl.extract_info(url)
-            return ytdl.prepare_filename(info)
 
 
 def getMaxVolume(s):
@@ -98,17 +88,16 @@ AUDIO_FADE_ENVELOPE_SIZE = 400  # smooth out transition's audio by quickly fadin
 
 createPath(TEMP_FOLDER)
 
+command = "ffprobe -v quiet -select_streams v -of default=noprint_wrappers=1:nokey=1 -show_entries stream=r_frame_rate \"" + INPUT_FILE + "\""
+subprocess.run(command, shell=True, stdout=open(TEMP_FOLDER + "/fps.txt", "w"), check=True)
+frameRate = float(open(TEMP_FOLDER + "/fps.txt").read().replace("/1\n", "")) if frameRate <= 0 else frameRate
+assert frameRate > 0 and frameRate != "", "Invalid framerate, check your options or video or set manually (0 and below)"
+
 command = "ffmpeg -i \"" + INPUT_FILE + "\" -qscale:v " + str(FRAME_QUALITY) + " " + TEMP_FOLDER + "/frame%06d.jpg -hide_banner"
 subprocess.run(command, shell=True, check=True)
 
 command = "ffmpeg -i \"" + INPUT_FILE + "\" -ab 160k -ac 2 -ar " + str(SAMPLE_RATE) + " -vn " + TEMP_FOLDER + "/audio.wav"
 subprocess.run(command, shell=True, check=True)
-
-command = "ffprobe -v quiet -select_streams v -of default=noprint_wrappers=1:nokey=1 -show_entries stream=r_frame_rate \"" + INPUT_FILE + "\""
-subprocess.run(command, shell=True, stdout=open(TEMP_FOLDER + "/fps.txt", "w"))
-frameRate = float(open(TEMP_FOLDER + "/fps.txt").read().replace("/1\n", "")) if frameRate <= 0 else frameRate
-assert frameRate <= 0, "impossible framerate of {}, check your options or video (0 and below)".format(frameRate)
-
 
 sampleRate, audioData = wavfile.read(TEMP_FOLDER + "/audio.wav")
 audioSampleCount = audioData.shape[0]
@@ -144,11 +133,11 @@ outputAudioData = np.zeros((0, audioData.shape[1]))
 outputPointer = 0
 
 lastExistingFrame = None
+sFile = TEMP_FOLDER + "/tempStart.wav"
+eFile = TEMP_FOLDER + "/tempEnd.wav"
 for chunk in chunks:
     audioChunk = audioData[int(chunk[0] * samplesPerFrame):int(chunk[1] * samplesPerFrame)]
 
-    sFile = TEMP_FOLDER + "/tempStart.wav"
-    eFile = TEMP_FOLDER + "/tempEnd.wav"
     wavfile.write(sFile, SAMPLE_RATE, audioChunk)
     with WavReader(sFile) as reader:
         with WavWriter(eFile, reader.channels, reader.samplerate) as writer:
