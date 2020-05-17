@@ -7,7 +7,7 @@ from scipy.io import wavfile
 import numpy as np
 import re
 import math
-from shutil import copyfile, rmtree
+from shutil import move, rmtree
 import os
 import argparse
 from pytube import YouTube
@@ -28,7 +28,7 @@ def copyFrame(inputFrame,outputFrame):
     dst = TEMP_FOLDER+"/newFrame{:06d}".format(outputFrame+1)+".jpg"
     if not os.path.isfile(src):
         return False
-    copyfile(src, dst)
+    move(src, dst)
     if outputFrame%20 == 19:
         print(str(outputFrame+1)+" time-altered frames saved.")
     return True
