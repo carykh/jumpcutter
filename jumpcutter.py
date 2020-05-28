@@ -150,8 +150,7 @@ for chunk in chunks:
 
     wavfile.write(sFile, SAMPLE_RATE, audioChunk)
     with WavReader(sFile) as reader:
-        with WavWriter(eFile, reader.channels, reader.samplerate) as writer:
-            phasevocoder(reader.channels, speed=NEW_SPEED[int(chunk[2])]).run(reader, writer)
+        phasevocoder(reader.channels, speed=NEW_SPEED[int(chunk[2])]).run(reader, WavWriter(eFile, reader.channels, reader.samplerate))
     _, alteredAudioData = wavfile.read(eFile)
     leng = alteredAudioData.shape[0]
     endPointer = outputPointer + leng
@@ -164,8 +163,8 @@ for chunk in chunks:
     if leng < AUDIO_FADE_ENVELOPE_SIZE:
         outputAudioData[outputPointer:endPointer] = 0  # audio is less than 0.01 sec, let's just remove it.
     else:
-        premask = np.arange(AUDIO_FADE_ENVELOPE_SIZE) / AUDIO_FADE_ENVELOPE_SIZE
-        mask = np.repeat(premask[:, np.newaxis], 2, axis=1)  # make the fade-envelope mask stereo
+        mask = np.repeat((np.arange(AUDIO_FADE_ENVELOPE_SIZE) / AUDIO_FADE_ENVELOPE_SIZE)[:, np.newaxis], 2,
+                         axis=1)  # make the fade-envelope mask stereo
         outputAudioData[outputPointer:outputPointer + AUDIO_FADE_ENVELOPE_SIZE] *= mask
         outputAudioData[endPointer - AUDIO_FADE_ENVELOPE_SIZE:endPointer] *= 1 - mask
 
@@ -174,22 +173,19 @@ for chunk in chunks:
     for outputFrame in range(startOutputFrame, endOutputFrame):
         inputFrame = int(chunk[0] + NEW_SPEED[int(chunk[2])] * (outputFrame - startOutputFrame))
         didItWork = copyFrame(inputFrame, outputFrame)
-        if didItWork:
-            lastExistingFrame = inputFrame
-        else:
-            copyFrame(lastExistingFrame, outputFrame)
+        if didItWork: lastExistingFrame = inputFrame
+        else: copyFrame(lastExistingFrame, outputFrame)
 
     outputPointer = endPointer
 
 wavfile.write(TEMP_FOLDER + "/audioNew.wav", SAMPLE_RATE, outputAudioData)
 
-'''
-outputFrame = math.ceil(outputPointer/samplesPerFrame)
-for endGap in range(outputFrame,audioFrameCount):
-    copyFrame(int(audioSampleCount/samplesPerFrame)-1,endGap)
-'''
+# outputFrame = math.ceil(outputPointer/samplesPerFrame)
+# for endGap in range(outputFrame,audioFrameCount):
+#     copyFrame(int(audioSampleCount/samplesPerFrame)-1,endGap)
 
-command = "ffmpeg -framerate " + str(frameRate) + " -i " + TEMP_FOLDER + "/newFrame%06d.jpg -i " + TEMP_FOLDER + "/audioNew.wav -strict -2 \"" + OUTPUT_FILE + "\""
-subprocess.run(command, shell=True, check=True)
+command = "ffmpeg -hide_banner -loglevel " + LOG_LEVEL + " -stats -framerate " + str(FRAME_RATE) + " -i " + TEMP_FOLDER + "/newFrame%06d.jpg -i " + TEMP_FOLDER + "/audioNew.wav -strict -2 \"" + OUTPUT_FILE + "\""
+try: subprocess.run(command, shell=True, check=True)
+except subprocess.CalledProcessError: raise Exception("Either you have canceled the operation, or the operation has failed")
 
 deletePath(TEMP_FOLDER)
