@@ -1,27 +1,20 @@
+import argparse
+import math
+import os
 import subprocess
+from shutil import copyfile, rmtree
+import re
+import numpy as np
+import youtube_dl
 from audiotsm import phasevocoder
 from audiotsm.io.wav import WavReader, WavWriter
 from scipy.io import wavfile
-import numpy as np
-import math
-from shutil import copyfile, rmtree
-import os
-import argparse
-try:
-    from pytube import YouTube
-
-    def downloadFile(url):
-        name = YouTube(url).streams.first().download()
-        return name
-
-except ImportError:
-    import youtube_dl
 
 
-    def downloadFile(url):
-        with youtube_dl.YoutubeDL() as ytdl:
-            info = ytdl.extract_info(url)
-            return ytdl.prepare_filename(info)
+def downloadFile(url):
+    with youtube_dl.YoutubeDL() as ytdl:
+        info = ytdl.extract_info(url)
+        return ytdl.prepare_filename(info)
 
 
 def getMaxVolume(s):
