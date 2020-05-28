@@ -96,3 +96,6 @@ gen
 
 # macOS File System
 .DS_Store
+
+# Useless temp folder
+/TEMP/*

@@ -43,7 +43,7 @@ def createPath(s):
     # assert (not os.path.exists(s)), "The filepath "+s+" already exists. Don't want to overwrite it. Aborting."
 
     try:
-        if os.path.exists("TEMP"):
+        if os.path.exists(TEMP_FOLDER):
             deletePath(s)
         os.mkdir(s)
     except OSError:
