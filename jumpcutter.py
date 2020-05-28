@@ -58,25 +58,27 @@ def deletePath(s):  # Dangerous! Watch out!
         print(OSError)
 
 
-parser = argparse.ArgumentParser(description='Modifies a video file to play at different speeds when there is sound vs. silence.')
-parser.add_argument('-i', '--input_file', type=str, help='the video file you want modified')
-parser.add_argument('-u', '--url', type=str, help='A youtube video url to download and process')
+parser = argparse.ArgumentParser(description="Modifies a video file to play at different speeds when there is sound vs. silence.")
+parser.add_argument('-i', '--input_file', type=str, help="the video file you want modified")
+parser.add_argument('-u', '--url', type=str, help="A youtube video url to download and process")
 parser.add_argument('-o', '--output_file', type=str, default="", help="the output file. (optional. if not included, it'll just modify the input file name, overwrites output_format)")
 parser.add_argument('-O', '--output_format', type=str, default="", help="format of output video (optional. if not included uses input)")
 parser.add_argument('--silent_threshold', type=float, default=0.03, help="the volume amount that frames' audio needs to surpass to be consider \"sounded\". It ranges from 0 (silence) to 1 (max volume)")
 parser.add_argument('-S', '--sounded_speed', type=float, default=1.00, help="the speed that sounded (spoken) frames should be played at. Typically 1.")
 parser.add_argument('-s', '--silent_speed', type=float, default=5.00, help="the speed that silent frames should be played at. 999999 for jumpcutting.")
+parser.add_argument('-L', '--loglevel', type=str, default='error', help="change the log level of FFmpeg (Levels: quiet, panic, fatal, error, warning, info, verbose, debug, trace)")
 parser.add_argument('--frame_margin', type=float, default=1, help="some silent frames adjacent to sounded frames are included to provide context. How many frames on either the side of speech should be included? That's this variable.")
-parser.add_argument('--sample_rate', type=float, default=44100, help="sample rate of the input and output videos")
+parser.add_argument('--sample_rate', type=float, default=0, help="sample rate of the input and output videos")
 parser.add_argument('-fps', '--frame_rate', type=float, default=0, help="frame rate of the input and output videos. optional... I try to find it out myself, but it doesn't always work.")
 parser.add_argument('-q', '--frame_quality', type=int, default=3, help="quality of frames to be extracted from input video. 1 is highest, 31 is lowest, 3 is the default.")
 
 args = parser.parse_args()
 
-frameRate = args.frame_rate
+FRAME_RATE = args.frame_rate
 SAMPLE_RATE = args.sample_rate
 SILENT_THRESHOLD = args.silent_threshold
 FRAME_SPREADAGE = args.frame_margin
+LOG_LEVEL = str(args.loglevel).lower() if re.search("quiet|panic|fatal|error|warning|info|verbose|debug|trace|\d+", str(args.loglevel).lower()) else "error"
 NEW_SPEED = [args.silent_speed, args.sounded_speed]
 INPUT_FILE = downloadFile(args.url) if args.url is not None else args.input_file
 OUTPUT_FORMAT = args.output_format
@@ -91,22 +93,27 @@ AUDIO_FADE_ENVELOPE_SIZE = 400  # smooth out transition's audio by quickly fadin
 
 createPath(TEMP_FOLDER)
 
-command = "ffprobe -v quiet -select_streams v -of default=noprint_wrappers=1:nokey=1 -show_entries stream=r_frame_rate \"" + INPUT_FILE + "\""
-subprocess.run(command, shell=True, stdout=open(TEMP_FOLDER + "/fps.txt", "w"), check=True)
-frameRate = float(open(TEMP_FOLDER + "/fps.txt").read().replace("/1\n", "")) if frameRate <= 0 else frameRate
-assert frameRate > 0 and frameRate != "", "Invalid framerate, check your options or video or set manually (0 and below)"
+command = "ffprobe -v quiet -hide_banner -show_entries stream=sample_rate -of default=noprint_wrappers=1:nokey=1 \"" + INPUT_FILE + "\""
+subprocess.run(command, shell=True, stdout=open(TEMP_FOLDER + "/sample_rate.txt", "w"), check=True)
+SAMPLE_RATE = int(open(TEMP_FOLDER + "/sample_rate.txt").read()) if SAMPLE_RATE <= 0 else SAMPLE_RATE
 
-command = "ffmpeg -i \"" + INPUT_FILE + "\" -qscale:v " + str(FRAME_QUALITY) + " " + TEMP_FOLDER + "/frame%06d.jpg -hide_banner"
+command = "ffprobe -v quiet -hide_banner -select_streams v -of default=noprint_wrappers=1:nokey=1 -show_entries stream=r_frame_rate \"" + INPUT_FILE + "\""
+subprocess.run(command, shell=True, stdout=open(TEMP_FOLDER + "/fps.txt", "w"), check=True)
+FRAME_RATE = float(open(TEMP_FOLDER + "/fps.txt").read().replace("/1\n", "")) if FRAME_RATE <= 0 else FRAME_RATE
+assert FRAME_RATE > 0 and FRAME_RATE != "", "Invalid framerate, check your options or video or set manually (0 and below)"
+
+command = "ffmpeg -i \"" + INPUT_FILE + "\" -hide_banner -loglevel " + LOG_LEVEL + " -stats -qscale:v " + str(FRAME_QUALITY) + " " + TEMP_FOLDER + "/frame%06d.jpg"
 subprocess.run(command, shell=True, check=True)
 
-command = "ffmpeg -i \"" + INPUT_FILE + "\" -ab 160k -ac 2 -ar " + str(SAMPLE_RATE) + " -vn " + TEMP_FOLDER + "/audio.wav"
+command = "ffmpeg -i \"" + INPUT_FILE + "\" -hide_banner -loglevel " + LOG_LEVEL + " -stats -ab 160k -ac 2 -ar " + str(SAMPLE_RATE) + " -vn " + TEMP_FOLDER + "/audio.wav"
 subprocess.run(command, shell=True, check=True)
 
 sampleRate, audioData = wavfile.read(TEMP_FOLDER + "/audio.wav")
+sampleRate = sampleRate if SAMPLE_RATE <= 0 else SAMPLE_RATE
 audioSampleCount = audioData.shape[0]
 maxAudioVolume = getMaxVolume(audioData)
 
-samplesPerFrame = sampleRate / frameRate
+samplesPerFrame = sampleRate / FRAME_RATE
 
 audioFrameCount = int(math.ceil(audioSampleCount / samplesPerFrame))
 
