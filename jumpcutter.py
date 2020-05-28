@@ -23,14 +23,14 @@ def getMaxVolume(s):
     return max(maxv, -minv)
 
 
-def copyFrame(inputFrame, outputFrame):
-    src = TEMP_FOLDER + "/frame{:06d}".format(inputFrame + 1) + ".jpg"
-    dst = TEMP_FOLDER + "/newFrame{:06d}".format(outputFrame + 1) + ".jpg"
+def copyFrame(inFrame, outFrame):
+    src = TEMP_FOLDER + "/frame{:06d}".format(inFrame + 1) + ".jpg"
+    dst = TEMP_FOLDER + "/newFrame{:06d}".format(outFrame + 1) + ".jpg"
     if not os.path.isfile(src):
         return False
     copyfile(src, dst)
-    if outputFrame % 20 == 19:
-        print(str(outputFrame + 1) + " time-altered frames saved.", end="\r", flush=True)
+    if outFrame % 20 == 19:
+        print(str(outFrame + 1) + " time-altered frames saved.", end="\r", flush=True)
     return True
 
 
@@ -129,14 +129,16 @@ for i in range(audioFrameCount):
 
 chunks = [[0, 0, 0]]
 shouldIncludeFrame = np.zeros(audioFrameCount)
+tempI = 0
 for i in range(audioFrameCount):
     start = int(max(0, i - FRAME_SPREADAGE))
     end = int(min(audioFrameCount, i + 1 + FRAME_SPREADAGE))
     shouldIncludeFrame[i] = np.max(hasLoudAudio[start:end])
     if i >= 1 and shouldIncludeFrame[i] != shouldIncludeFrame[i - 1]:  # Did we flip?
         chunks.append([chunks[-1][1], i, shouldIncludeFrame[i - 1]])
+    tempI = i
 
-chunks.append([chunks[-1][1], audioFrameCount, shouldIncludeFrame[i - 1]])
+chunks.append([chunks[-1][1], audioFrameCount, shouldIncludeFrame[tempI - 1]])  # Unbound local variable fix
 chunks = chunks[1:]
 
 outputAudioData = np.zeros((0, audioData.shape[1]))
