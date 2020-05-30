@@ -1,20 +1,27 @@
 import argparse
 import math
 import os
+import re
 import subprocess
 from shutil import copyfile, rmtree
-import re
+
 import numpy as np
-import youtube_dl
 from audiotsm import phasevocoder
 from audiotsm.io.wav import WavReader, WavWriter
 from scipy.io import wavfile
 
+try:
+    from youtube_dl import YoutubeDL as YtDL
 
-def downloadFile(url):
-    with youtube_dl.YoutubeDL() as ytdl:
-        info = ytdl.extract_info(url)
-        return ytdl.prepare_filename(info)
+
+    def downloadFile(url):
+        with YtDL() as ytdl:
+            info = ytdl.extract_info(url)
+            return ytdl.prepare_filename(info)
+except ImportError as err:
+    def downloadFile(url):
+        assert False, "youtube_dl module not found! Please install with \"pip install youtube_dl\"\n{0}".format(
+            str(err))
 
 
 def getMaxVolume(s):
@@ -26,28 +33,27 @@ def getMaxVolume(s):
 def copyFrame(inFrame, outFrame):
     src = TEMP_FOLDER + "/frame{:06d}".format(inFrame + 1) + ".jpg"
     dst = TEMP_FOLDER + "/newFrame{:06d}".format(outFrame + 1) + ".jpg"
-    if not os.path.isfile(src):
-        return False
+    if not os.path.isfile(src): return False
     copyfile(src, dst)
-    if outFrame % 20 == 19:
-        print(str(outFrame + 1) + " time-altered frames saved.", end="\r", flush=True)
+    if outFrame % 20 == 19: print(str(outFrame + 1) + " time-altered frames saved.", end="\r", flush=True)
     return True
 
 
 def inputToOutputFilename(filename, formats=None):
     dotIndex = filename.rfind(".")
-    return filename[:dotIndex] + "_ALTERED" + (filename[dotIndex:] if formats is None or formats == "" else formats if "." in formats else "." + formats)
+    return filename[:dotIndex] + "_ALTERED" + (
+        filename[dotIndex:] if formats is None or formats == "" else formats if "." in formats else "." + formats)
 
 
 def createPath(s):
     # assert (not os.path.exists(s)), "The filepath "+s+" already exists. Don't want to overwrite it. Aborting."
 
     try:
-        if os.path.exists(TEMP_FOLDER):
-            deletePath(s)
+        if os.path.exists(TEMP_FOLDER): deletePath(s)
         os.mkdir(s)
     except OSError:
-        assert False, "Creation of the directory %s failed. (The TEMP folder may already exist. Delete or rename it, and try again.)"
+        assert False, "Creation of the directory %s failed. (The TEMP folder may already exist. Delete or rename it, " \
+                      "and try again.)"
 
 
 def deletePath(s):  # Dangerous! Watch out!
@@ -177,8 +183,10 @@ for chunk in chunks:
     for outputFrame in range(startOutputFrame, endOutputFrame):
         inputFrame = int(chunk[0] + NEW_SPEED[int(chunk[2])] * (outputFrame - startOutputFrame))
         didItWork = copyFrame(inputFrame, outputFrame)
-        if didItWork: lastExistingFrame = inputFrame
-        else: copyFrame(lastExistingFrame, outputFrame)
+        if didItWork:
+            lastExistingFrame = inputFrame
+        else:
+            copyFrame(lastExistingFrame, outputFrame)
 
     outputPointer = endPointer
 print("%s time-altered frames saved." % (outputFrame + 1))
@@ -191,7 +199,9 @@ wavfile.write(os.path.join(TEMP_FOLDER, "audioNew.wav"), SAMPLE_RATE, outputAudi
 
 command = "ffmpeg -hide_banner -loglevel " + LOG_LEVEL + " -stats -framerate " + str(FRAME_RATE) + " -i " + os.path.join(TEMP_FOLDER, "newFrame%06d.jpg") + " -i " + os.path.join(TEMP_FOLDER, "audioNew.wav") + " -strict -2 \"" + OUTPUT_FILE + "\""
 if FILE_OVERWRITE: command += " -y"
-try: subprocess.run(command, shell=True, check=True)
-except subprocess.CalledProcessError: raise Exception("Either you have canceled the operation, or the operation has failed")
+try:
+    subprocess.run(command, shell=True, check=True)
+except subprocess.CalledProcessError:
+    raise Exception("Either you have canceled the operation, or the operation has failed")
 
 deletePath(TEMP_FOLDER)
