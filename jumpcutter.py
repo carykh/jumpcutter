@@ -96,21 +96,21 @@ AUDIO_FADE_ENVELOPE_SIZE = 400  # smooth out transition's audio by quickly fadin
 createPath(TEMP_FOLDER)
 
 command = "ffprobe -v quiet -hide_banner -show_entries stream=sample_rate -of default=noprint_wrappers=1:nokey=1 \"" + INPUT_FILE + "\""
-subprocess.run(command, shell=True, stdout=open(TEMP_FOLDER + "/sample_rate.txt", "w"), check=True)
-SAMPLE_RATE = eval(open(TEMP_FOLDER + "/sample_rate.txt").read()) if SAMPLE_RATE <= 0 else SAMPLE_RATE
+subprocess.run(command, shell=True, stdout=open(os.path.join(TEMP_FOLDER, "sample_rate.txt"), "w"), check=True)
+SAMPLE_RATE = eval(open(os.path.join(TEMP_FOLDER, "sample_rate.txt")).read()) if SAMPLE_RATE <= 0 else SAMPLE_RATE
 
 command = "ffprobe -v quiet -hide_banner -select_streams v -of default=noprint_wrappers=1:nokey=1 -show_entries stream=r_frame_rate \"" + INPUT_FILE + "\""
-subprocess.run(command, shell=True, stdout=open(TEMP_FOLDER + "/fps.txt", "w"), check=True)
-FRAME_RATE = eval(open(TEMP_FOLDER + "/fps.txt").read()) if FRAME_RATE <= 0 else FRAME_RATE
+subprocess.run(command, shell=True, stdout=open(os.path.join(TEMP_FOLDER, "fps.txt"), "w"), check=True)
+FRAME_RATE = eval(open(os.path.join(TEMP_FOLDER, "fps.txt")).read()) if FRAME_RATE <= 0 else FRAME_RATE
 assert FRAME_RATE > 0 and FRAME_RATE != "", "Invalid framerate, check your options or video or set manually (0 and below)"
 
-command = "ffmpeg -i \"" + INPUT_FILE + "\" -hide_banner -loglevel " + LOG_LEVEL + " -stats -qscale:v " + str(FRAME_QUALITY) + " " + TEMP_FOLDER + "/frame%06d.jpg"
+command = "ffmpeg -i \"" + INPUT_FILE + "\" -hide_banner -loglevel " + LOG_LEVEL + " -stats -qscale:v " + str(FRAME_QUALITY) + " " + os.path.join(TEMP_FOLDER, "frame%06d.jpg")
 subprocess.run(command, shell=True, check=True)
 
-command = "ffmpeg -i \"" + INPUT_FILE + "\" -hide_banner -loglevel " + LOG_LEVEL + " -stats -ab 160k -ac 2 -ar " + str(SAMPLE_RATE) + " -vn " + TEMP_FOLDER + "/audio.wav"
+command = "ffmpeg -i \"" + INPUT_FILE + "\" -hide_banner -loglevel " + LOG_LEVEL + " -stats -ab 160k -ac 2 -ar " + str(SAMPLE_RATE) + " -vn " + os.path.join(TEMP_FOLDER, "audio.wav")
 subprocess.run(command, shell=True, check=True)
 
-sampleRate, audioData = wavfile.read(TEMP_FOLDER + "/audio.wav")
+sampleRate, audioData = wavfile.read(os.path.join(TEMP_FOLDER, "audio.wav"))
 sampleRate = sampleRate if SAMPLE_RATE <= 0 else SAMPLE_RATE
 audioSampleCount = audioData.shape[0]
 maxAudioVolume = getMaxVolume(audioData)
@@ -147,8 +147,8 @@ outputAudioData = np.zeros((0, audioData.shape[1]))
 outputPointer = 0
 
 lastExistingFrame = None
-sFile = TEMP_FOLDER + "/tempStart.wav"
-eFile = TEMP_FOLDER + "/tempEnd.wav"
+sFile = os.path.join(TEMP_FOLDER, "tempStart.wav")
+eFile = os.path.join(TEMP_FOLDER, "tempEnd.wav")
 outputFrame = 0
 for chunk in chunks:
     audioChunk = audioData[int(chunk[0] * samplesPerFrame):int(chunk[1] * samplesPerFrame)]
@@ -183,13 +183,13 @@ for chunk in chunks:
     outputPointer = endPointer
 print("%s time-altered frames saved." % (outputFrame + 1))
 
-wavfile.write(TEMP_FOLDER + "/audioNew.wav", SAMPLE_RATE, outputAudioData)
+wavfile.write(os.path.join(TEMP_FOLDER, "audioNew.wav"), SAMPLE_RATE, outputAudioData)
 
 # outputFrame = math.ceil(outputPointer/samplesPerFrame)
 # for endGap in range(outputFrame,audioFrameCount):
 #     copyFrame(int(audioSampleCount/samplesPerFrame)-1,endGap)
 
-command = "ffmpeg -hide_banner -loglevel " + LOG_LEVEL + " -stats -framerate " + str(FRAME_RATE) + " -i " + TEMP_FOLDER + "/newFrame%06d.jpg -i " + TEMP_FOLDER + "/audioNew.wav -strict -2 \"" + OUTPUT_FILE + "\""
+command = "ffmpeg -hide_banner -loglevel " + LOG_LEVEL + " -stats -framerate " + str(FRAME_RATE) + " -i " + os.path.join(TEMP_FOLDER, "newFrame%06d.jpg") + " -i " + os.path.join(TEMP_FOLDER, "audioNew.wav") + " -strict -2 \"" + OUTPUT_FILE + "\""
 if FILE_OVERWRITE: command += " -y"
 try: subprocess.run(command, shell=True, check=True)
 except subprocess.CalledProcessError: raise Exception("Either you have canceled the operation, or the operation has failed")
