@@ -97,11 +97,11 @@ createPath(TEMP_FOLDER)
 
 command = "ffprobe -v quiet -hide_banner -show_entries stream=sample_rate -of default=noprint_wrappers=1:nokey=1 \"" + INPUT_FILE + "\""
 subprocess.run(command, shell=True, stdout=open(TEMP_FOLDER + "/sample_rate.txt", "w"), check=True)
-SAMPLE_RATE = int(open(TEMP_FOLDER + "/sample_rate.txt").read()) if SAMPLE_RATE <= 0 else SAMPLE_RATE
+SAMPLE_RATE = eval(open(TEMP_FOLDER + "/sample_rate.txt").read()) if SAMPLE_RATE <= 0 else SAMPLE_RATE
 
 command = "ffprobe -v quiet -hide_banner -select_streams v -of default=noprint_wrappers=1:nokey=1 -show_entries stream=r_frame_rate \"" + INPUT_FILE + "\""
 subprocess.run(command, shell=True, stdout=open(TEMP_FOLDER + "/fps.txt", "w"), check=True)
-FRAME_RATE = float(open(TEMP_FOLDER + "/fps.txt").read().replace("/1\n", "")) if FRAME_RATE <= 0 else FRAME_RATE
+FRAME_RATE = eval(open(TEMP_FOLDER + "/fps.txt").read()) if FRAME_RATE <= 0 else FRAME_RATE
 assert FRAME_RATE > 0 and FRAME_RATE != "", "Invalid framerate, check your options or video or set manually (0 and below)"
 
 command = "ffmpeg -i \"" + INPUT_FILE + "\" -hide_banner -loglevel " + LOG_LEVEL + " -stats -qscale:v " + str(FRAME_QUALITY) + " " + TEMP_FOLDER + "/frame%06d.jpg"
