@@ -61,6 +61,7 @@ def deletePath(s):  # Dangerous! Watch out!
 parser = argparse.ArgumentParser(description="Modifies a video file to play at different speeds when there is sound vs. silence.")
 parser.add_argument('-i', '--input_file', type=str, help="the video file you want modified")
 parser.add_argument('-u', '--url', type=str, help="A youtube video url to download and process")
+parser.add_argument('-y', '--overwrite', help="Automatically overwrite existing file", action="store_true")
 parser.add_argument('-o', '--output_file', type=str, default="", help="the output file. (optional. if not included, it'll just modify the input file name, overwrites output_format)")
 parser.add_argument('-O', '--output_format', type=str, default="", help="format of output video (optional. if not included uses input)")
 parser.add_argument('--silent_threshold', type=float, default=0.03, help="the volume amount that frames' audio needs to surpass to be consider \"sounded\". It ranges from 0 (silence) to 1 (max volume)")
@@ -74,6 +75,7 @@ parser.add_argument('-q', '--frame_quality', type=int, default=3, help="quality 
 
 args = parser.parse_args()
 
+FILE_OVERWRITE = args.overwrite
 FRAME_RATE = args.frame_rate
 SAMPLE_RATE = args.sample_rate
 SILENT_THRESHOLD = args.silent_threshold
@@ -138,7 +140,7 @@ for i in range(audioFrameCount):
         chunks.append([chunks[-1][1], i, shouldIncludeFrame[i - 1]])
     tempI = i
 
-chunks.append([chunks[-1][1], audioFrameCount, shouldIncludeFrame[tempI - 1]])  # Unbound local variable fix
+chunks.append([chunks[-1][1], audioFrameCount, shouldIncludeFrame[tempI - 1]])
 chunks = chunks[1:]
 
 outputAudioData = np.zeros((0, audioData.shape[1]))
@@ -147,6 +149,7 @@ outputPointer = 0
 lastExistingFrame = None
 sFile = TEMP_FOLDER + "/tempStart.wav"
 eFile = TEMP_FOLDER + "/tempEnd.wav"
+outputFrame = 0
 for chunk in chunks:
     audioChunk = audioData[int(chunk[0] * samplesPerFrame):int(chunk[1] * samplesPerFrame)]
 
@@ -165,8 +168,7 @@ for chunk in chunks:
     if leng < AUDIO_FADE_ENVELOPE_SIZE:
         outputAudioData[outputPointer:endPointer] = 0  # audio is less than 0.01 sec, let's just remove it.
     else:
-        mask = np.repeat((np.arange(AUDIO_FADE_ENVELOPE_SIZE) / AUDIO_FADE_ENVELOPE_SIZE)[:, np.newaxis], 2,
-                         axis=1)  # make the fade-envelope mask stereo
+        mask = np.repeat((np.arange(AUDIO_FADE_ENVELOPE_SIZE) / AUDIO_FADE_ENVELOPE_SIZE)[:, np.newaxis], 2, axis=1)  # make the fade-envelope mask stereo
         outputAudioData[outputPointer:outputPointer + AUDIO_FADE_ENVELOPE_SIZE] *= mask
         outputAudioData[endPointer - AUDIO_FADE_ENVELOPE_SIZE:endPointer] *= 1 - mask
 
@@ -179,6 +181,7 @@ for chunk in chunks:
         else: copyFrame(lastExistingFrame, outputFrame)
 
     outputPointer = endPointer
+print("%s time-altered frames saved." % (outputFrame + 1))
 
 wavfile.write(TEMP_FOLDER + "/audioNew.wav", SAMPLE_RATE, outputAudioData)
 
@@ -187,6 +190,7 @@ wavfile.write(TEMP_FOLDER + "/audioNew.wav", SAMPLE_RATE, outputAudioData)
 #     copyFrame(int(audioSampleCount/samplesPerFrame)-1,endGap)
 
 command = "ffmpeg -hide_banner -loglevel " + LOG_LEVEL + " -stats -framerate " + str(FRAME_RATE) + " -i " + TEMP_FOLDER + "/newFrame%06d.jpg -i " + TEMP_FOLDER + "/audioNew.wav -strict -2 \"" + OUTPUT_FILE + "\""
+if FILE_OVERWRITE: command += " -y"
 try: subprocess.run(command, shell=True, check=True)
 except subprocess.CalledProcessError: raise Exception("Either you have canceled the operation, or the operation has failed")
 
