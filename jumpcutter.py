@@ -69,13 +69,15 @@ def safe_eval(expression):
     safe_expressions = {}
     code = compile(expression, "<string>", "eval")
     for name in code.co_names:
-        if name not in safe_expressions:
-            raise NameError(f"A unsafe expression '{name}' has been found during evaluation")
+        if name not in safe_expressions: raise NameError(f"A unsafe expression '{name}' has been found during evaluation")
     return eval(expression, {"__builtins__": {}}, safe_expressions)
 
 
 parser = argparse.ArgumentParser(description="Modifies a video file to play at different speeds when there is sound vs. silence.")
-parser.add_argument(dest='file', metavar="File or URL", type=str, help="Provide a filename or a youtube video URL to process")
+parser.add_argument(dest='name', metavar="File or URL", type=str, help="Provide a filename or a youtube video URL to process (cannot use the arguments like --file or --url to put url or file name)")
+parser.add_argument('-f', '--file', dest="isFile", help="the video file you want modified. Optional parameter", action="store_true")
+# clarification: if you use a video id, it is not a link and therefore needs to be defined as a link
+parser.add_argument('-u', '--url', dest="isURL", help="A youtube video url to download and process. Optional parameter", action="store_true")
 parser.add_argument('-y', '--overwrite', help="Automatically overwrite existing file", action="store_true")
 parser.add_argument('-o', '--output-file', metavar="filename", dest="output_file", type=str, default="", help="the output file. (optional. if not included, it'll just modify the input file name, overwrites output_format)")
 parser.add_argument('-O', '--output-format', metavar="Format", dest="output_format", type=str, default="", help="format of output video (optional. if not included uses input file)")
@@ -97,7 +99,7 @@ SILENT_THRESHOLD = args.silent_threshold
 FRAME_SPREADAGE = args.frame_margin
 LOG_LEVEL = str(args.log_level).lower() if re.search("quiet|panic|fatal|error|warning|info|verbose|debug|trace|\d+", str(args.log_level).lower()) else "error"
 NEW_SPEED = [args.silent_speed, args.sounded_speed]
-INPUT_FILE = downloadFile(args.file) if re.match("http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+", args.file) else args.file
+INPUT_FILE = downloadFile(args.name) if (re.match("http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+", args.name) or args.isURL) and not args.isFile else args.name
 OUTPUT_FORMAT = args.output_format
 FRAME_QUALITY = args.frame_quality
 
