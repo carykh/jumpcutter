@@ -16,7 +16,10 @@ try:
 
 
     def downloadFile(url):
-        with YtDL() as ytdl:
+        ydl_opts = {
+            "restrictfilenames": True
+        }
+        with YtDL(ydl_opts) as ytdl:
             info = ytdl.extract_info(url)
             return ytdl.prepare_filename(info)
 except ImportError as err:
