@@ -8,6 +8,7 @@ from ast import literal_eval
 from shutil import copyfile, rmtree
 
 import numpy as np
+from sys import stderr
 from audiotsm import phasevocoder
 from audiotsm.io.wav import WavReader, WavWriter
 from scipy.io import wavfile
@@ -92,6 +93,7 @@ parser.add_argument('--frame-margin', metavar="margin", dest="frame_margin", typ
 parser.add_argument('-fps', '--frame-rate', metavar="FPS", dest="frame_rate", type=float, default=0, help="frame rate of the input and output videos. (optional)")
 parser.add_argument('--sample-rate', metavar="rate", dest="sample_rate", type=float, default=0, help="sample rate of the input and output videos")
 parser.add_argument('-q', '--frame-quality', metavar="quality", dest="frame_quality", type=int, default=3, help="quality of frames to be extracted from input video. 1 is highest, 31 is lowest, 3 is the default.")
+parser.add_argument('-audio', '--audio-only', default=False, action="store_true", dest="audio_only")
 
 args = parser.parse_args()
 
@@ -105,6 +107,7 @@ NEW_SPEED = [args.silent_speed, args.sounded_speed]
 INPUT_FILE = downloadFile(args.name) if (re.match("http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+", args.name) or args.isURL) and not args.isFile else args.name
 OUTPUT_FORMAT = args.output_format
 FRAME_QUALITY = args.frame_quality
+AUDIO_ONLY = args.audio_only
 
 OUTPUT_FILE = args.output_file if args.output_file else inputToOutputFilename(INPUT_FILE, OUTPUT_FORMAT)
 
@@ -113,20 +116,29 @@ AUDIO_FADE_ENVELOPE_SIZE = 400  # smooth out transition's audio by quickly fadin
 
 createPath(TEMP_FOLDER)
 
-command = "ffprobe -i '{0}' -v {1} -hide_banner -show_entries stream=sample_rate -of default=noprint_wrappers=1:nokey=1"\
+command = "ffprobe -i '{0}' -v {1} -hide_banner -select_streams a -show_entries stream=sample_rate -of default=noprint_wrappers=1:nokey=1"\
     .format(INPUT_FILE, LOG_LEVEL)
 subprocess.run(command, shell=True, stdout=open(os.path.join(TEMP_FOLDER, "sample_rate.txt"), "w"), check=True)
 SAMPLE_RATE = literal_eval(open(os.path.join(TEMP_FOLDER, "sample_rate.txt")).read()) if SAMPLE_RATE <= 0 else SAMPLE_RATE
 
-command = "ffprobe -i '{0}' -v {1} -hide_banner -select_streams v -of default=noprint_wrappers=1:nokey=1 -show_entries stream=r_frame_rate"\
-    .format(INPUT_FILE, LOG_LEVEL)
-subprocess.run(command, shell=True, stdout=open(os.path.join(TEMP_FOLDER, "fps.txt"), "w"), check=True)
-FRAME_RATE = safe_eval(open(os.path.join(TEMP_FOLDER, "fps.txt")).read()) if FRAME_RATE <= 0 else FRAME_RATE
-assert FRAME_RATE > 0 and FRAME_RATE, "Invalid framerate, check your options or video or set manually (0 and below)"
+if not AUDIO_ONLY:
+    command = "ffprobe -i '{0}' -v {1} -hide_banner -select_streams v -of default=noprint_wrappers=1:nokey=1 -show_entries stream=r_frame_rate"\
+        .format(INPUT_FILE, LOG_LEVEL)
+    subprocess.run(command, shell=True, stdout=open(os.path.join(TEMP_FOLDER, "fps.txt"), "w"), check=True)
+    # try:
+    FRAME_RATE = safe_eval(open(os.path.join(TEMP_FOLDER, "fps.txt")).read()) if FRAME_RATE <= 0 else FRAME_RATE
+    # except SyntaxError:
+    #     stderr.write("Unable to get video frame rate, possibly because there is not video stream. Switching to audio only\n")
+    #     AUDIO_ONLY = True
+    #     FRAME_RATE = 0
+    # if not AUDIO_ONLY:
+    assert FRAME_RATE > 0, "Invalid framerate, check your options or video or set manually (0 or below)"
 
-command = "ffmpeg -i '{0}' {1} -hide_banner -loglevel {2} -stats -qscale:v {3}" \
-    .format(INPUT_FILE, os.path.join(TEMP_FOLDER, "frame%06d.jpg"), LOG_LEVEL, str(FRAME_QUALITY))
-subprocess.run(command, shell=True, check=True)
+if not AUDIO_ONLY:
+    command = "ffmpeg -i '{0}' {1} -hide_banner -loglevel {2} -stats -qscale:v {3}" \
+        .format(INPUT_FILE, os.path.join(TEMP_FOLDER, "frame%06d.jpg"), LOG_LEVEL, str(FRAME_QUALITY))
+    subprocess.run(command, shell=True, check=True)
+
 
 command = "ffmpeg -i '{0}' -hide_banner -loglevel {1} -stats -ab 160k -ac 2 -ar {2} -vn {3}"\
     .format(INPUT_FILE, LOG_LEVEL, str(SAMPLE_RATE), os.path.join(TEMP_FOLDER, "audio.wav"))
@@ -137,7 +149,7 @@ sampleRate = sampleRate if SAMPLE_RATE <= 0 else SAMPLE_RATE
 audioSampleCount = audioData.shape[0]
 maxAudioVolume = getMaxVolume(audioData)
 
-samplesPerFrame = sampleRate / FRAME_RATE
+samplesPerFrame = sampleRate / FRAME_RATE if not AUDIO_ONLY else sampleRate
 
 audioFrameCount = int(math.ceil(audioSampleCount / samplesPerFrame))
 
@@ -163,6 +175,7 @@ for i in range(audioFrameCount):
 
 chunks.append([chunks[-1][1], audioFrameCount, shouldIncludeFrame[tempI - 1]])
 chunks = chunks[1:]
+del tempI
 
 outputAudioData = np.zeros((0, audioData.shape[1]))
 outputPointer = 0
@@ -193,6 +206,7 @@ for chunk in chunks:
         outputAudioData[outputPointer:outputPointer + AUDIO_FADE_ENVELOPE_SIZE] *= mask
         outputAudioData[endPointer - AUDIO_FADE_ENVELOPE_SIZE:endPointer] *= 1 - mask
 
+    if AUDIO_ONLY: continue  # skip rest of loop if audio only
     startOutputFrame = int(math.ceil(outputPointer / samplesPerFrame))
     endOutputFrame = int(math.ceil(endPointer / samplesPerFrame))
     for outputFrame in range(startOutputFrame, endOutputFrame):
@@ -204,7 +218,7 @@ for chunk in chunks:
             copyFrame(lastExistingFrame, outputFrame)
 
     outputPointer = endPointer
-print("%s time-altered frames saved." % (outputFrame + 1))
+if not AUDIO_ONLY: print("%s time-altered frames saved." % (outputFrame + 1))
 
 wavfile.write(os.path.join(TEMP_FOLDER, "audioNew.wav"), SAMPLE_RATE, outputAudioData)
 
@@ -212,13 +226,16 @@ wavfile.write(os.path.join(TEMP_FOLDER, "audioNew.wav"), SAMPLE_RATE, outputAudi
 # for endGap in range(outputFrame,audioFrameCount):
 #     copyFrame(int(audioSampleCount/samplesPerFrame)-1,endGap)
 
-command = "ffmpeg -hide_banner -loglevel {0} -stats -framerate {1} -i {2} -i {3} -strict -2 '{4}'" \
-    .format(LOG_LEVEL, str(FRAME_RATE), os.path.join(TEMP_FOLDER, "newFrame%06d.jpg"),
-            os.path.join(TEMP_FOLDER, "audioNew.wav"), OUTPUT_FILE)
-if FILE_OVERWRITE: command += " -y"
-try:
-    subprocess.run(command, shell=True, check=True)
-except subprocess.CalledProcessError:
-    raise Exception("Either you have canceled the operation, or the operation has failed")
+if not AUDIO_ONLY:
+    command = "ffmpeg -hide_banner -loglevel {0} -stats -framerate {1} -i {2} -i {3} -strict -2 '{4}'" \
+        .format(LOG_LEVEL, str(FRAME_RATE), os.path.join(TEMP_FOLDER, "newFrame%06d.jpg"),
+                os.path.join(TEMP_FOLDER, "audioNew.wav"), OUTPUT_FILE)
+    if FILE_OVERWRITE: command += " -y"
+    try:
+        subprocess.run(command, shell=True, check=True)
+    except subprocess.CalledProcessError:
+        raise Exception("Either you have canceled the operation, or the operation has failed")
+else:
+    copyfile(os.path.join(TEMP_FOLDER, "audioNew.wav"), OUTPUT_FILE)
 
 deletePath(TEMP_FOLDER)
