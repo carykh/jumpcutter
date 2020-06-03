@@ -4,8 +4,9 @@ import os
 import re
 import subprocess
 import traceback
-from shutil import copyfile, rmtree
 from ast import literal_eval
+from shutil import copyfile, rmtree
+
 import numpy as np
 from audiotsm import phasevocoder
 from audiotsm.io.wav import WavReader, WavWriter
@@ -44,9 +45,8 @@ def copyFrame(inFrame, outFrame):
 
 
 def inputToOutputFilename(filename, formats=None):
-    dotIndex = filename.rfind(".")
-    return filename[:dotIndex] + "_ALTERED" + (
-        filename[dotIndex:] if formats is None or formats == "" else formats if "." in formats else "." + formats)
+    sep = filename.rpartition(".")
+    return "{}_ALTERED.{}".format(sep[0], formats.lstrip(".") if formats else sep[2])
 
 
 def createPath(s):
@@ -122,10 +122,10 @@ command = "ffprobe -i '{0}' -v {1} -hide_banner -select_streams v -of default=no
     .format(INPUT_FILE, LOG_LEVEL)
 subprocess.run(command, shell=True, stdout=open(os.path.join(TEMP_FOLDER, "fps.txt"), "w"), check=True)
 FRAME_RATE = safe_eval(open(os.path.join(TEMP_FOLDER, "fps.txt")).read()) if FRAME_RATE <= 0 else FRAME_RATE
-assert FRAME_RATE > 0 and FRAME_RATE != "", "Invalid framerate, check your options or video or set manually (0 and below)"
+assert FRAME_RATE > 0 and FRAME_RATE, "Invalid framerate, check your options or video or set manually (0 and below)"
 
-command = "ffmpeg -i '{0}' {3} -hide_banner -loglevel {1} -stats -qscale:v {2}"\
-    .format(INPUT_FILE, LOG_LEVEL, str(FRAME_QUALITY), os.path.join(TEMP_FOLDER, "frame%06d.jpg"))
+command = "ffmpeg -i '{0}' {1} -hide_banner -loglevel {2} -stats -qscale:v {3}" \
+    .format(INPUT_FILE, os.path.join(TEMP_FOLDER, "frame%06d.jpg"), LOG_LEVEL, str(FRAME_QUALITY))
 subprocess.run(command, shell=True, check=True)
 
 command = "ffmpeg -i '{0}' -hide_banner -loglevel {1} -stats -ab 160k -ac 2 -ar {2} -vn {3}"\
