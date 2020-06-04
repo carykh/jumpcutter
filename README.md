@@ -1,7 +1,7 @@
 # jumpcutter
-Automatically edits videos. Explanation here: https://www.youtube.com/watch?v=DQ8orIurGxw
+Automatically edits videos. Explanation here: <https://www.youtube.com/watch?v=DQ8orIurGxw>
 
-## Some heads-up:
+## Some heads-up
 
 It uses Python 3.
 
