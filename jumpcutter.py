@@ -2,13 +2,12 @@ import argparse
 import math
 import os
 import re
-import subprocess
 import traceback
 from ast import literal_eval
 from shutil import copyfile, rmtree
+from subprocess import CalledProcessError, run
 
 import numpy as np
-from sys import stderr
 from audiotsm import phasevocoder
 from audiotsm.io.wav import WavReader, WavWriter
 from scipy.io import wavfile
@@ -24,10 +23,9 @@ try:
         with YtDL(ydl_opts) as ytdl:
             info = ytdl.extract_info(url)
             return ytdl.prepare_filename(info)
-except ImportError as err:
+except ImportError:
     def downloadFile(url):
-        assert False, "youtube_dl module not found! Please install with \"pip install youtube_dl\"\n{0}".format(
-            str(err))
+        raise ModuleNotFoundError("youtube_dl module not found! Please install with \"pip install youtube_dl\"")
 
 
 def getMaxVolume(s):
@@ -51,14 +49,11 @@ def inputToOutputFilename(filename, formats=None):
 
 
 def createPath(s):
-    # assert (not os.path.exists(s)), "The filepath "+s+" already exists. Don't want to overwrite it. Aborting."
-
     try:
         if os.path.exists(TEMP_FOLDER): deletePath(s)
         os.mkdir(s)
     except OSError:
-        assert False, "Creation of the directory %s failed. (The TEMP folder may already exist. Delete or rename it, " \
-                      "and try again.)"
+        raise OSError("Creation of the directory %s failed. (The TEMP folder may already exist. Delete or rename it, and try again.)")
 
 
 def deletePath(s):  # Dangerous! Watch out!
@@ -118,31 +113,32 @@ createPath(TEMP_FOLDER)
 
 command = "ffprobe -i '{0}' -v {1} -hide_banner -select_streams a -show_entries stream=sample_rate -of default=noprint_wrappers=1:nokey=1"\
     .format(INPUT_FILE, LOG_LEVEL)
-subprocess.run(command, shell=True, stdout=open(os.path.join(TEMP_FOLDER, "sample_rate.txt"), "w"), check=True)
+run(command, stdout=open(os.path.join(TEMP_FOLDER, "sample_rate.txt"), "w"), check=True)
 SAMPLE_RATE = literal_eval(open(os.path.join(TEMP_FOLDER, "sample_rate.txt")).read()) if SAMPLE_RATE <= 0 else SAMPLE_RATE
 
 if not AUDIO_ONLY:
     command = "ffprobe -i '{0}' -v {1} -hide_banner -select_streams v -of default=noprint_wrappers=1:nokey=1 -show_entries stream=r_frame_rate"\
         .format(INPUT_FILE, LOG_LEVEL)
-    subprocess.run(command, shell=True, stdout=open(os.path.join(TEMP_FOLDER, "fps.txt"), "w"), check=True)
+    run(command, stdout=open(os.path.join(TEMP_FOLDER, "fps.txt"), "w"), check=True)
     # try:
     FRAME_RATE = safe_eval(open(os.path.join(TEMP_FOLDER, "fps.txt")).read()) if FRAME_RATE <= 0 else FRAME_RATE
     # except SyntaxError:
-    #     stderr.write("Unable to get video frame rate, possibly because there is not video stream. Switching to audio only\n")
+    #     sys.stderr.write("Unable to get video frame rate, possibly because there is not video stream. Switching to audio only\n")
     #     AUDIO_ONLY = True
     #     FRAME_RATE = 0
     # if not AUDIO_ONLY:
-    assert FRAME_RATE > 0, "Invalid framerate, check your options or video or set manually (0 or below)"
+    if not FRAME_RATE > 0:
+        raise ValueError("Invalid framerate, check your options or video or set manually (0 or below)")
 
 if not AUDIO_ONLY:
     command = "ffmpeg -i '{0}' {1} -hide_banner -loglevel {2} -stats -qscale:v {3}" \
         .format(INPUT_FILE, os.path.join(TEMP_FOLDER, "frame%06d.jpg"), LOG_LEVEL, str(FRAME_QUALITY))
-    subprocess.run(command, shell=True, check=True)
+    run(command, check=True)
 
 
 command = "ffmpeg -i '{0}' -hide_banner -loglevel {1} -stats -ab 160k -ac 2 -ar {2} -vn {3}"\
     .format(INPUT_FILE, LOG_LEVEL, str(SAMPLE_RATE), os.path.join(TEMP_FOLDER, "audio.wav"))
-subprocess.run(command, shell=True, check=True)
+run(command, check=True)
 
 sampleRate, audioData = wavfile.read(os.path.join(TEMP_FOLDER, "audio.wav"))
 sampleRate = sampleRate if SAMPLE_RATE <= 0 else SAMPLE_RATE
@@ -232,8 +228,8 @@ if not AUDIO_ONLY:
                 os.path.join(TEMP_FOLDER, "audioNew.wav"), OUTPUT_FILE)
     if FILE_OVERWRITE: command += " -y"
     try:
-        subprocess.run(command, shell=True, check=True)
-    except subprocess.CalledProcessError:
+        run(command, check=True)
+    except CalledProcessError:
         raise Exception("Either you have canceled the operation, or the operation has failed")
 else:
     copyfile(os.path.join(TEMP_FOLDER, "audioNew.wav"), OUTPUT_FILE)
