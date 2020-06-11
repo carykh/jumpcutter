@@ -113,32 +113,26 @@ createPath(TEMP_FOLDER)
 
 command = "ffprobe -i '{0}' -v {1} -hide_banner -select_streams a -show_entries stream=sample_rate -of default=noprint_wrappers=1:nokey=1"\
     .format(INPUT_FILE, LOG_LEVEL)
-run(command, stdout=open(os.path.join(TEMP_FOLDER, "sample_rate.txt"), "w"), check=True)
+run(command, stdout=open(os.path.join(TEMP_FOLDER, "sample_rate.txt"), "w"), check=True, shell=True)
 SAMPLE_RATE = literal_eval(open(os.path.join(TEMP_FOLDER, "sample_rate.txt")).read()) if SAMPLE_RATE <= 0 else SAMPLE_RATE
 
 if not AUDIO_ONLY:
     command = "ffprobe -i '{0}' -v {1} -hide_banner -select_streams v -of default=noprint_wrappers=1:nokey=1 -show_entries stream=r_frame_rate"\
         .format(INPUT_FILE, LOG_LEVEL)
-    run(command, stdout=open(os.path.join(TEMP_FOLDER, "fps.txt"), "w"), check=True)
-    # try:
+    run(command, stdout=open(os.path.join(TEMP_FOLDER, "fps.txt"), "w"), check=True, shell=True)
     FRAME_RATE = safe_eval(open(os.path.join(TEMP_FOLDER, "fps.txt")).read()) if FRAME_RATE <= 0 else FRAME_RATE
-    # except SyntaxError:
-    #     sys.stderr.write("Unable to get video frame rate, possibly because there is not video stream. Switching to audio only\n")
-    #     AUDIO_ONLY = True
-    #     FRAME_RATE = 0
-    # if not AUDIO_ONLY:
     if not FRAME_RATE > 0:
         raise ValueError("Invalid framerate, check your options or video or set manually (0 or below)")
 
 if not AUDIO_ONLY:
     command = "ffmpeg -i '{0}' {1} -hide_banner -loglevel {2} -stats -qscale:v {3}" \
         .format(INPUT_FILE, os.path.join(TEMP_FOLDER, "frame%06d.jpg"), LOG_LEVEL, str(FRAME_QUALITY))
-    run(command, check=True)
+    run(command, check=True, shell=True)
 
 
 command = "ffmpeg -i '{0}' -hide_banner -loglevel {1} -stats -ab 160k -ac 2 -ar {2} -vn {3}"\
     .format(INPUT_FILE, LOG_LEVEL, str(SAMPLE_RATE), os.path.join(TEMP_FOLDER, "audio.wav"))
-run(command, check=True)
+run(command, check=True, shell=True)
 
 sampleRate, audioData = wavfile.read(os.path.join(TEMP_FOLDER, "audio.wav"))
 sampleRate = sampleRate if SAMPLE_RATE <= 0 else SAMPLE_RATE
@@ -228,7 +222,7 @@ if not AUDIO_ONLY:
                 os.path.join(TEMP_FOLDER, "audioNew.wav"), OUTPUT_FILE)
     if FILE_OVERWRITE: command += " -y"
     try:
-        run(command, check=True)
+        run(command, check=True, shell=True)
     except CalledProcessError:
         raise Exception("Either you have canceled the operation, or the operation has failed")
 else:
