@@ -92,6 +92,8 @@ parser.add_argument('-audio', '--audio-only', default=False, action="store_true"
 
 args = parser.parse_args()
 
+INPUT_FILE = downloadFile(args.name) if (re.match("http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+", args.name) or args.isURL) and not args.isFile else args.name
+if not os.path.exists(INPUT_FILE): raise FileNotFoundError("Make your the input of your file exists, or is defined as a url")
 FILE_OVERWRITE = args.overwrite
 FRAME_RATE = args.frame_rate
 SAMPLE_RATE = args.sample_rate
@@ -99,7 +101,6 @@ SILENT_THRESHOLD = args.silent_threshold
 FRAME_SPREADAGE = args.frame_margin
 LOG_LEVEL = str(args.log_level).lower() if re.search("quiet|panic|fatal|error|warning|info|verbose|debug|trace|\d+", str(args.log_level).lower()) else "error"
 NEW_SPEED = [args.silent_speed, args.sounded_speed]
-INPUT_FILE = downloadFile(args.name) if (re.match("http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+", args.name) or args.isURL) and not args.isFile else args.name
 OUTPUT_FORMAT = args.output_format
 FRAME_QUALITY = args.frame_quality
 AUDIO_ONLY = args.audio_only
@@ -113,12 +114,14 @@ createPath(TEMP_FOLDER)
 
 command = "ffprobe -i '{0}' -v {1} -hide_banner -select_streams a -show_entries stream=sample_rate -of default=noprint_wrappers=1:nokey=1"\
     .format(INPUT_FILE, LOG_LEVEL)
+print("Getting sample rate...")
 run(command, stdout=open(os.path.join(TEMP_FOLDER, "sample_rate.txt"), "w"), check=True, shell=True)
 SAMPLE_RATE = literal_eval(open(os.path.join(TEMP_FOLDER, "sample_rate.txt")).read()) if SAMPLE_RATE <= 0 else SAMPLE_RATE
 
 if not AUDIO_ONLY:
     command = "ffprobe -i '{0}' -v {1} -hide_banner -select_streams v -of default=noprint_wrappers=1:nokey=1 -show_entries stream=r_frame_rate"\
         .format(INPUT_FILE, LOG_LEVEL)
+    print("Getting frame rate...")
     run(command, stdout=open(os.path.join(TEMP_FOLDER, "fps.txt"), "w"), check=True, shell=True)
     FRAME_RATE = safe_eval(open(os.path.join(TEMP_FOLDER, "fps.txt")).read()) if FRAME_RATE <= 0 else FRAME_RATE
     if not FRAME_RATE > 0:
