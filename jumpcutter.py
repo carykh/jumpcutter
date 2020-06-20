@@ -17,9 +17,7 @@ try:
 
 
     def downloadFile(url):
-        ydl_opts = {
-            "restrictfilenames": True
-        }
+        ydl_opts = {}
         with YtDL(ydl_opts) as ytdl:
             info = ytdl.extract_info(url)
             return ytdl.prepare_filename(info)
@@ -50,10 +48,10 @@ def inputToOutputFilename(filename, formats=None):
 
 def createPath(s):
     try:
-        if os.path.exists(TEMP_FOLDER): deletePath(s)
+        if os.path.exists(s): deletePath(s)
         os.mkdir(s)
     except OSError:
-        raise OSError("Creation of the directory %s failed. (The TEMP folder may already exist. Delete or rename it, and try again.)")
+        raise
 
 
 def deletePath(s):  # Dangerous! Watch out!
@@ -61,7 +59,7 @@ def deletePath(s):  # Dangerous! Watch out!
         rmtree(s)
     except OSError:
         print("Deletion of the directory %s failed" % s)
-        traceback.print_exc()
+        raise
 
 
 def safe_eval(expression):
@@ -80,8 +78,8 @@ parser.add_argument('-u', '--url', dest="isURL", help="A youtube video url to do
 parser.add_argument('-y', '--overwrite', help="Automatically overwrite existing file", action="store_true")
 parser.add_argument('-o', '--output-file', metavar="filename", dest="output_file", type=str, default="", help="the output file. (optional. if not included, it'll just modify the input file name, overwrites output_format)")
 parser.add_argument('-O', '--output-format', metavar="Format", dest="output_format", type=str, default="", help="format of output video (optional. if not included uses input file)")
-parser.add_argument('-s', '--silent-speed', metavar="Speed", dest="silent_speed", type=float, default=5.00, help="the speed that silent frames should be played at. 999999 for jumpcutting.")
-parser.add_argument('-S', '--sounded-speed', metavar="Speed", dest="sounded_speed", type=float, default=1.00, help="the speed that sounded (spoken) frames should be played at. Typically 1.")
+parser.add_argument('-s', '--silent-speed', metavar="Silent speed", dest="silent_speed", type=float, default=5.00, help="the speed that silent frames should be played at. 999999 for jumpcutting.")
+parser.add_argument('-S', '--sounded-speed', metavar="Sounded speed", dest="sounded_speed", type=float, default=1.00, help="the speed that sounded (spoken) frames should be played at. Typically 1.")
 parser.add_argument('--silent-threshold', metavar="silence", dest="silent_threshold", type=float, default=0.03, help="the volume amount that frames' audio needs to surpass to be consider \"sounded\". It ranges from 0 (silence) to 1 (max volume)")
 parser.add_argument('-L', '--log-level', metavar="error", dest="log_level", type=str, default='error', help="change the log level of FFmpeg (Levels: quiet, panic, fatal, error, warning, info, verbose, debug, trace, or any number from 0)")
 parser.add_argument('--frame-margin', metavar="margin", dest="frame_margin", type=float, default=1, help="some silent frames adjacent to sounded frames are included to provide context. How many frames on either the side of speech should be included? That's this variable.")
@@ -142,7 +140,7 @@ sampleRate = sampleRate if SAMPLE_RATE <= 0 else SAMPLE_RATE
 audioSampleCount = audioData.shape[0]
 maxAudioVolume = getMaxVolume(audioData)
 
-samplesPerFrame = sampleRate / FRAME_RATE if not AUDIO_ONLY else sampleRate
+samplesPerFrame = sampleRate / FRAME_RATE if not AUDIO_ONLY else sampleRate 
 
 audioFrameCount = int(math.ceil(audioSampleCount / samplesPerFrame))
 
