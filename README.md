@@ -17,5 +17,8 @@ I want to use pyinstaller to turn this into an executable, so non-techy people
 can use it EVEN IF they don't have Python and all those libraries. Jabrils 
 recommended this to me. However, my pyinstaller build did not work. :( HELP
 
+## Installing required libraries
+`pip install -r requirements.txt` to install all requirements. If it does not install, try with `pip3` instead
+
 ## Building with nix
 `nix-build` to get a script with all the libraries and ffmpeg, `nix-build -A bundle` to get a single binary.
