@@ -14,7 +14,7 @@ from pytube import YouTube
 
 def downloadFile(url):
     name = YouTube(url).streams.first().download()
-    newname = name.replace(' ','_')
+    newname = (name.replace(' ','_')).replace('&','and')
     os.rename(name,newname)
     return newname
 
