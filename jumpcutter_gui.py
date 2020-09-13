@@ -158,5 +158,5 @@ def runCommand(cmd, timeout=None, window=None):
 
 
 if __name__ == '__main__':
-    sg.theme('Dark Grey 11')  # in version 4.29.0.8.  You'll get a random theme if not present.
+    sg.theme('Dark Grey 9')
     main()
