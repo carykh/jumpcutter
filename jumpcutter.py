@@ -93,7 +93,7 @@ createPath(TEMP_FOLDER)
 
 
 print('Importing the footage...')
-V=ffmpeg.input(INPUT_FILE).output(TEMP_FOLDER+"/audio.wav", **{'loglevel':'warning', 'nostats':'-hide_banner'}).run_async()
+V=ffmpeg.input(INPUT_FILE).output(TEMP_FOLDER+"/audio.wav", **{'loglevel':'warning'}).run_async()
 ffmpeg.input(INPUT_FILE).output(TEMP_FOLDER+"/frame%06d.jpg", **{'qscale:v': FRAME_QUALITY,'loglevel':'warning', 'stats':'-hide_banner'}).run()
 print('Image import finished...')
 
@@ -186,7 +186,7 @@ for endGap in range(outputFrame,audioFrameCount):
 print('\nExporting the footage...')
 video = ffmpeg.input(TEMP_FOLDER+"/newFrame*.jpg", pattern_type='glob', framerate=frameRate)
 audio = ffmpeg.input(TEMP_FOLDER+"/audioNew.wav")
-out = ffmpeg.output(video, audio, OUTPUT_FILE, framerate=frameRate, **{'loglevel':'warning', 'stats':'-hide_banner'})
+out = ffmpeg.output(video, audio, OUTPUT_FILE, framerate=frameRate, **{'loglevel':'warning'})
 out.run(quiet=0)
 
 print('Clean-up...')
