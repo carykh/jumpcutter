@@ -99,24 +99,17 @@ command = "ffmpeg -i "+INPUT_FILE+" -ab 160k -ac 2 -ar "+str(SAMPLE_RATE)+" -vn 
 
 subprocess.call(command, shell=True)
 
-command = "ffmpeg -i "+TEMP_FOLDER+"/input.mp4 2>&1"
-f = open(TEMP_FOLDER+"/params.txt", "w")
-subprocess.call(command, shell=True, stdout=f)
-
-
-
 sampleRate, audioData = wavfile.read(TEMP_FOLDER+"/audio.wav")
 audioSampleCount = audioData.shape[0]
 maxAudioVolume = getMaxVolume(audioData)
 
-f = open(TEMP_FOLDER+"/params.txt", 'r+')
-pre_params = f.read()
-f.close()
-params = pre_params.split('\n')
-for line in params:
-    m = re.search('Stream #.*Video.* ([0-9]*) fps',line)
-    if m is not None:
-        frameRate = float(m.group(1))
+# Get frame rate with ffprobe
+command = "ffprobe -v error -select_streams v:0 -show_entries stream=avg_frame_rate -of " \
+          "default=noprint_wrappers=1:nokey=1 " + INPUT_FILE
+stdout = subprocess.run(command, capture_output=True, text=True).stdout
+print("Detected frame rate: " + str(stdout))
+return_values = [int(val) for val in stdout.split('/')]
+frameRate = return_values[0] / return_values[1]
 
 samplesPerFrame = sampleRate/frameRate
 
