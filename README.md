@@ -1,5 +1,6 @@
 # jumpcutter
 Automatically edits videos. Explanation here: https://www.youtube.com/watch?v=DQ8orIurGxw
+Go here for a more polished version of this software that my friends and I have been working on for the last year or so: https://jumpcutter.com/
 
 ## Some heads-up:
 
