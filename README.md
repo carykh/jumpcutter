@@ -18,5 +18,19 @@ I want to use pyinstaller to turn this into an executable, so non-techy people
 can use it EVEN IF they don't have Python and all those libraries. Jabrils 
 recommended this to me. However, my pyinstaller build did not work. :( HELP
 
+## Install prerequisites
+Do `pip install scipy, numpy, pillow, audiotsm, pytube` to get all the dependencies.
+
+**Make sure to install [ffmpeg codex](https://ffmpeg.org/download.html)** and to put the exe on `C:\Windows` folder (you will need admin rights to do so)
+
+
+## Example command
+
+`python jumpcutter.py --input_file input_video.mp4 --output_file output_video.mp4 --sounded_speed 1 --silent_speed 999999 --frame_margin 2 `
+This takes the file `input_video.mp4` and gives it a jump cut effect on silent parts then saves it as output_video.mp4
+heres a fun one `python jumpcutter.py --url https://www.youtube.com/watch?v=DQ8orIurGxw  --output_file output3_video.mp4 --sounded_speed 999999 --silent_speed 1 --frame_margin 2 `
+it keeps only silence in the video
+Remember that if you need help use `python jumpcutter.py -h` it opens help, where you see more info about what each argument does.
+
 ## Building with nix
 `nix-build` to get a script with all the libraries and ffmpeg, `nix-build -A bundle` to get a single binary.
