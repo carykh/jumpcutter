@@ -11,7 +11,6 @@ from shutil import copyfile, rmtree
 import os
 import argparse
 from pytube import YouTube
-
 def downloadFile(url):
     name = YouTube(url).streams.first().download()
     newname = name.replace(' ','_')

@@ -15,7 +15,7 @@ temporary folder. If your video is long, this could take a LOT of space.
 I have processed 17-minute videos completely fine, but be wary if you're gonna go longer.**
 
 
-I wanted to use pyi nstaller to turn this into an executable, so non-techy people
+I wanted to use pyinstaller to turn this into an executable, so non-techy people
 can use it EVEN IF they don't have Python and all those libraries. Jabrils 
 recommended this to me. However, my pyinstaller build did not work. :( HELP
 
