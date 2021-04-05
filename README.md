@@ -24,6 +24,8 @@ Do `pip install scipy, numpy, pillow, audiotsm, pytube` to get all the dependenc
 
 **Make sure to install [ffmpeg codex](https://ffmpeg.org/download.html)** and to put the exe on `C:\Windows` folder (you will need admin rights to do so)
 
+## instant jumpcut
+ `instantjumpcut.py` is a more user friendly version. It makes so you can run it without writing the command every time. Just remember to have the url or file name in hand.
 
 ## Example command
 

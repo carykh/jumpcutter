@@ -76,7 +76,10 @@ if args.url != None:
     INPUT_FILE = downloadFile(args.url)
 else:
     INPUT_FILE = args.input_file
-URL = args.url
+
+
+
+# URL = args.url
 FRAME_QUALITY = args.frame_quality
 
 assert INPUT_FILE != None , "why u put no input file, that dum"
@@ -196,7 +199,7 @@ for endGap in range(outputFrame,audioFrameCount):
     copyFrame(int(audioSampleCount/samplesPerFrame)-1,endGap)
 '''
 
-command = "ffmpeg -framerate "+str(frameRate)+" -i "+TEMP_FOLDER+"/newFrame%06d.jpg -i "+TEMP_FOLDER+"/audioNew.wav -strict -2 "+OUTPUT_FILE
+command = "ffmpeg -framerate "+str(frameRate)+" -i "+TEMP_FOLDER+"/newFrame%06d.jpg -i "+TEMP_FOLDER+"/audioNew.wav -strict -2 Output/"+OUTPUT_FILE
 subprocess.call(command, shell=True)
 
 deletePath(TEMP_FOLDER)
