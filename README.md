@@ -1,6 +1,8 @@
 # jumpcutter
 Automatically edits videos. Explanation here: https://www.youtube.com/watch?v=DQ8orIurGxw
-Go here for a more polished version of this software that my friends and I have been working on for the last year or so: https://jumpcutter.com/
+
+Go here for a more polished version of this software that my friends and I have been working on fr the last year or so: https://jumpcutter.com/
+
 Since my GitHub is more like a dumping ground or personal journal, I'm not going to be actively updating this GitHub repo. But if you do want a version of jumpcutter that is actively being worked on, please do check on the version at https://jumpcutter.com/! There's way more developers fixing bugs and adding new features to that tool, and there's a developer's Discord server to discuss anything JC-related, so go check it out!
 
 ## Some heads-up:
