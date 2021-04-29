@@ -93,3 +93,7 @@ ENV/
 *.iml
 out
 gen
+
+#Extra Gitnore for jumpcutter
+*.mp4
+.vscode
