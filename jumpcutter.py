@@ -52,8 +52,35 @@ def deletePath(s): # Dangerous! Watch out!
         print ("Deletion of the directory %s failed" % s)
         print(OSError)
 
+def writeELD(start, end, number):
+    startFrame = int(start % frameRate)
+    startSecond = int((start / frameRate) % 60)
+    startMinute = int((start / frameRate / 60) % 60)
+    startHour = int((start / frameRate / 60 / 60))
+
+    endFrame = int(end % frameRate)
+    endSecond = int((end / frameRate) % 60)
+    endMinute = int((end / frameRate / 60) % 60)
+    endHour = int((end / frameRate / 60 / 60))
+
+    eld_file = open(OUTPUT_FILE, "a")
+    eld_file.write("{0} 001 V C {4}:{3}:{2}:{1} {8}:{7}:{6}:{5} {4}:{3}:{2}:{1} {8}:{7}:{6}:{5}\r\n".format(
+        str(number).zfill(3),
+        str(startFrame).zfill(2),
+        str(startSecond).zfill(2),
+        str(startMinute).zfill(2),
+        str(startHour).zfill(2),
+        str(endFrame).zfill(2),
+        str(endSecond).zfill(2),
+        str(endMinute).zfill(2),
+        str(endHour).zfill(2)
+    ))
+    eld_file.close()
+
+
 parser = argparse.ArgumentParser(description='Modifies a video file to play at different speeds when there is sound vs. silence.')
 parser.add_argument('--input_file', type=str,  help='the video file you want modified')
+parser.add_argument('--edl', type=bool,  help='EDL export option. (Supports only cuts off)')
 parser.add_argument('--url', type=str, help='A youtube url to download and process')
 parser.add_argument('--output_file', type=str, default="", help="the output file. (optional. if not included, it'll just modify the input file name)")
 parser.add_argument('--silent_threshold', type=float, default=0.03, help="the volume amount that frames' audio needs to surpass to be consider \"sounded\". It ranges from 0 (silence) to 1 (max volume)")
@@ -79,9 +106,11 @@ else:
     INPUT_FILE = args.input_file
 URL = args.url
 FRAME_QUALITY = args.frame_quality
+EDL = args.edl
 
 assert INPUT_FILE != None , "why u put no input file, that dum"
     
+OUTPUT_FILE = inputToOutputFilename(INPUT_FILE)
 if len(args.output_file) >= 1:
     OUTPUT_FILE = args.output_file
 else:
@@ -92,8 +121,9 @@ AUDIO_FADE_ENVELOPE_SIZE = 400 # smooth out transitiion's audio by quickly fadin
     
 createPath(TEMP_FOLDER)
 
-command = "ffmpeg -i "+INPUT_FILE+" -qscale:v "+str(FRAME_QUALITY)+" "+TEMP_FOLDER+"/frame%06d.jpg -hide_banner"
-subprocess.call(command, shell=True)
+if not EDL:
+    command = "ffmpeg -i "+INPUT_FILE+" -qscale:v "+str(FRAME_QUALITY)+" "+TEMP_FOLDER+"/frame%06d.jpg -hide_banner"
+    subprocess.call(command, shell=True)
 
 command = "ffmpeg -i "+INPUT_FILE+" -ab 160k -ac 2 -ar "+str(SAMPLE_RATE)+" -vn "+TEMP_FOLDER+"/audio.wav"
 
@@ -150,7 +180,16 @@ outputAudioData = np.zeros((0,audioData.shape[1]))
 outputPointer = 0
 
 lastExistingFrame = None
+edlFrameNumber = 0
+if EDL and os.path.isfile(OUTPUT_FILE):
+    os.remove(OUTPUT_FILE)
 for chunk in chunks:
+    if EDL:
+        if (chunk[2] == True):
+            edlFrameNumber += 1
+            writeELD(chunk[0], chunk[1], edlFrameNumber)
+        continue
+    
     audioChunk = audioData[int(chunk[0]*samplesPerFrame):int(chunk[1]*samplesPerFrame)]
     
     sFile = TEMP_FOLDER+"/tempStart.wav"
@@ -189,7 +228,8 @@ for chunk in chunks:
 
     outputPointer = endPointer
 
-wavfile.write(TEMP_FOLDER+"/audioNew.wav",SAMPLE_RATE,outputAudioData)
+if not EDL:
+    wavfile.write(TEMP_FOLDER+"/audioNew.wav",SAMPLE_RATE,outputAudioData)
 
 '''
 outputFrame = math.ceil(outputPointer/samplesPerFrame)
@@ -197,8 +237,9 @@ for endGap in range(outputFrame,audioFrameCount):
     copyFrame(int(audioSampleCount/samplesPerFrame)-1,endGap)
 '''
 
-command = "ffmpeg -framerate "+str(frameRate)+" -i "+TEMP_FOLDER+"/newFrame%06d.jpg -i "+TEMP_FOLDER+"/audioNew.wav -strict -2 "+OUTPUT_FILE
-subprocess.call(command, shell=True)
+if not EDL:
+    command = "ffmpeg -framerate "+str(frameRate)+" -i "+TEMP_FOLDER+"/newFrame%06d.jpg -i "+TEMP_FOLDER+"/audioNew.wav -strict -2 "+OUTPUT_FILE
+    subprocess.call(command, shell=True)
 
 deletePath(TEMP_FOLDER)
 
