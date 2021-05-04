@@ -17,10 +17,23 @@ let
       };
     };
 
+  pytube = python.pkgs.buildPythonPackage {
+      name = "pytube-9.5.0";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/5b/3a/76c9fa9d57224d0ba0de8f208c3ef4ef8b1d429c41c886f86eaee8ffd85e/pytube-9.5.0.tar.gz"; sha256 = "2a32f3475f063d25e7b7a7434a93b51d59aadbbda7ed24af48f097b2876c0964"; };
+      doCheck = false;
+      buildInputs = [];
+      meta = with pkgs.stdenv.lib; {
+         homepage = "https://github.com/nficano/pytube";
+         license = licenses.mit;
+         description = "A pythonic library for downloading YouTube Videos.";
+      };
+    };
+
   pythonForThis = python.withPackages (ps: with ps;[
     scipy
     numpy
     pillow
+    pytube
     audiotsm
   ]);
   jumpcutter = stdenv.mkDerivation {
@@ -35,7 +48,7 @@ let
       mkdir -p $out/bin
       echo "#!${pythonForThis}/bin/python" > $out/bin/jumpcutter
       cat $src/jumpcutter.py >> $out/bin/jumpcutter
-      substituteInPlace $out/bin/jumpcutter --replace ffmpeg ${ffmpeg}
+      substituteInPlace $out/bin/jumpcutter --replace ffmpeg ${ffmpeg}/bin/ffmpeg
       chmod +x $out/bin/jumpcutter
     '';
   };
