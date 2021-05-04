@@ -11,6 +11,8 @@ from shutil import copyfile, rmtree
 import os
 import argparse
 from pytube import YouTube
+import random
+import string
 
 def downloadFile(url):
     name = YouTube(url).streams.first().download()
@@ -52,6 +54,11 @@ def deletePath(s): # Dangerous! Watch out!
         print ("Deletion of the directory %s failed" % s)
         print(OSError)
 
+def randomString(stringLength=10):
+    """Generate a random string of fixed length """
+    letters = string.ascii_lowercase
+    return ''.join(random.choice(letters) for i in range(stringLength))
+
 parser = argparse.ArgumentParser(description='Modifies a video file to play at different speeds when there is sound vs. silence.')
 parser.add_argument('--input_file', type=str,  help='the video file you want modified')
 parser.add_argument('--url', type=str, help='A youtube url to download and process')
@@ -63,6 +70,7 @@ parser.add_argument('--frame_margin', type=float, default=1, help="some silent f
 parser.add_argument('--sample_rate', type=float, default=44100, help="sample rate of the input and output videos")
 parser.add_argument('--frame_rate', type=float, default=30, help="frame rate of the input and output videos. optional... I try to find it out myself, but it doesn't always work.")
 parser.add_argument('--frame_quality', type=int, default=3, help="quality of frames to be extracted from input video. 1 is highest, 31 is lowest, 3 is the default.")
+parser.add_argument('--tmp_dir', type=str, help='The tmp direcotry')
 
 args = parser.parse_args()
 
@@ -87,7 +95,14 @@ if len(args.output_file) >= 1:
 else:
     OUTPUT_FILE = inputToOutputFilename(INPUT_FILE)
 
-TEMP_FOLDER = "TEMP"
+TEMP_FOLDER = args.tmp_dir or "TEMP"
+
+AUDIO_FILE_NAME = 'audio' + randomString(10) + '.wav'
+NEW_AUDIO_FILE_NAME = 'newAudio' + randomString(10) + '.wav'
+PARAMS_FILE_NAME = 'params' + randomString(10) + '.txt'
+TEMP_START_FILE_NAME = 'tempStart' + randomString(10) + '.wav'
+TEMP_END_FILE_NAME = 'tempEnd' + randomString(10) + '.wav'
+
 AUDIO_FADE_ENVELOPE_SIZE = 400 # smooth out transitiion's audio by quickly fading in/out (arbitrary magic number whatever)
     
 createPath(TEMP_FOLDER)
@@ -95,21 +110,21 @@ createPath(TEMP_FOLDER)
 command = "ffmpeg -i "+INPUT_FILE+" -qscale:v "+str(FRAME_QUALITY)+" "+TEMP_FOLDER+"/frame%06d.jpg -hide_banner"
 subprocess.call(command, shell=True)
 
-command = "ffmpeg -i "+INPUT_FILE+" -ab 160k -ac 2 -ar "+str(SAMPLE_RATE)+" -vn "+TEMP_FOLDER+"/audio.wav"
+command = "ffmpeg -i "+INPUT_FILE+" -ab 160k -ac 2 -ar "+str(SAMPLE_RATE)+" -vn "+TEMP_FOLDER+"/"+AUDIO_FILE_NAME
 
 subprocess.call(command, shell=True)
 
 command = "ffmpeg -i "+TEMP_FOLDER+"/input.mp4 2>&1"
-f = open(TEMP_FOLDER+"/params.txt", "w")
+f = open(TEMP_FOLDER+"/"+PARAMS_FILE_NAME, "w")
 subprocess.call(command, shell=True, stdout=f)
 
 
 
-sampleRate, audioData = wavfile.read(TEMP_FOLDER+"/audio.wav")
+sampleRate, audioData = wavfile.read(TEMP_FOLDER+"/"+AUDIO_FILE_NAME)
 audioSampleCount = audioData.shape[0]
-maxAudioVolume = getMaxVolume(audioData)
+maxAudioVolume = getMaxVolume(audioData) or 1
 
-f = open(TEMP_FOLDER+"/params.txt", 'r+')
+f = open(TEMP_FOLDER+"/"+PARAMS_FILE_NAME, 'r+')
 pre_params = f.read()
 f.close()
 params = pre_params.split('\n')
@@ -153,8 +168,8 @@ lastExistingFrame = None
 for chunk in chunks:
     audioChunk = audioData[int(chunk[0]*samplesPerFrame):int(chunk[1]*samplesPerFrame)]
     
-    sFile = TEMP_FOLDER+"/tempStart.wav"
-    eFile = TEMP_FOLDER+"/tempEnd.wav"
+    sFile = TEMP_FOLDER+"/"+TEMP_START_FILE_NAME
+    eFile = TEMP_FOLDER+"/"+TEMP_END_FILE_NAME
     wavfile.write(sFile,SAMPLE_RATE,audioChunk)
     with WavReader(sFile) as reader:
         with WavWriter(eFile, reader.channels, reader.samplerate) as writer:
@@ -189,7 +204,7 @@ for chunk in chunks:
 
     outputPointer = endPointer
 
-wavfile.write(TEMP_FOLDER+"/audioNew.wav",SAMPLE_RATE,outputAudioData)
+wavfile.write(TEMP_FOLDER+"/"+NEW_AUDIO_FILE_NAME,SAMPLE_RATE,outputAudioData)
 
 '''
 outputFrame = math.ceil(outputPointer/samplesPerFrame)
@@ -197,7 +212,7 @@ for endGap in range(outputFrame,audioFrameCount):
     copyFrame(int(audioSampleCount/samplesPerFrame)-1,endGap)
 '''
 
-command = "ffmpeg -framerate "+str(frameRate)+" -i "+TEMP_FOLDER+"/newFrame%06d.jpg -i "+TEMP_FOLDER+"/audioNew.wav -strict -2 "+OUTPUT_FILE
+command = "ffmpeg -framerate "+str(frameRate)+" -i "+TEMP_FOLDER+"/newFrame%06d.jpg -i "+TEMP_FOLDER+"/"+NEW_AUDIO_FILE_NAME+" -strict -2 "+OUTPUT_FILE
 subprocess.call(command, shell=True)
 
 deletePath(TEMP_FOLDER)
