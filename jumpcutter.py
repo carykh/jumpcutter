@@ -10,7 +10,14 @@ import math
 from shutil import copyfile, rmtree
 import os
 import argparse
-from pytube import YouTube
+from pytube import YouTube,Playlist
+import shutil
+import os.path
+
+class DirValidationError(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+print()
 
 def downloadFile(url):
     name = YouTube(url).streams.first().download()
@@ -40,19 +47,21 @@ def inputToOutputFilename(filename):
 def createPath(s):
     #assert (not os.path.exists(s)), "The filepath "+s+" already exists. Don't want to overwrite it. Aborting."
 
-    try:  
+    try:
         os.mkdir(s)
-    except OSError:  
+    except OSError:
         assert False, "Creation of the directory %s failed. (The TEMP folder may already exist. Delete or rename it, and try again.)"
 
 def deletePath(s): # Dangerous! Watch out!
-    try:  
+    try:
         rmtree(s,ignore_errors=False)
-    except OSError:  
+    except OSError:
         print ("Deletion of the directory %s failed" % s)
         print(OSError)
 
 parser = argparse.ArgumentParser(description='Modifies a video file to play at different speeds when there is sound vs. silence.')
+parser.add_argument('--playlist', type=bool,default=False,  help='Would you like to download videos from playlists? (default=False)')
+parser.add_argument('--playlist_url', type=str, help='Playlist_url')
 parser.add_argument('--input_file', type=str,  help='the video file you want modified')
 parser.add_argument('--url', type=str, help='A youtube url to download and process')
 parser.add_argument('--output_file', type=str, default="", help="the output file. (optional. if not included, it'll just modify the input file name)")
@@ -73,15 +82,55 @@ SAMPLE_RATE = args.sample_rate
 SILENT_THRESHOLD = args.silent_threshold
 FRAME_SPREADAGE = args.frame_margin
 NEW_SPEED = [args.silent_speed, args.sounded_speed]
-if args.url != None:
-    INPUT_FILE = downloadFile(args.url)
+if args.playlist==False:
+    if args.url != None:
+        INPUT_FILE = downloadFile(args.url)
+    else:
+        INPUT_FILE = args.input_file
 else:
-    INPUT_FILE = args.input_file
+    INPUT_FILE='video.mp4'
+    if not args.playlist_url:
+        assert args.playlist_url != None , "Hey, put a playlist url"
+    else:
+        PLAYLIST_URL=args.playlist_url
+        VDEOS_TEMP_FOLDER = "V_TEMP"
+    path=os.path.join(__file__)
+    try:
+        os.mkdir(VDEOS_TEMP_FOLDER)
+    except:
+        raise DirValidationError('Directory <{0}> already exists, delete or rename it'.format(VDEOS_TEMP_FOLDER))
+
+
+    playlist = Playlist(PLAYLIST_URL)
+    co=0
+    for url in playlist.parse_links():
+        video_link = url
+        name = YouTube(url).streams.first().download(VDEOS_TEMP_FOLDER)
+        print('Video <' + name + ' sucsessfilly downloaded')
+        newname = str(co)+'.'+name.split('.')[-1]
+        os.rename(
+        name,VDEOS_TEMP_FOLDER+'\\'+newname
+        )
+        co+=1
+    arr = os.listdir(VDEOS_TEMP_FOLDER)
+    print(arr)
+    f = open(VDEOS_TEMP_FOLDER+"/inputs.txt", "w")
+    for i in arr:
+         f.write("""file '"""+__file__.replace(__file__.split('\\')[-1],'')+''+VDEOS_TEMP_FOLDER+'\\'+i+"""'\n""")
+    f.close()
+    command='ffmpeg -f concat -safe 0 -i '+__file__.replace(__file__.split('\\')[-1],'')+VDEOS_TEMP_FOLDER+'\\inputs.txt -c copy video.mp4'
+    subprocess.call(command, shell=True)
+    try:
+        shutil.rmtree(VDEOS_TEMP_FOLDER)
+    except:
+        raise DirValidationError('Somehow you managed to delete a <{0}> directory'.format(VDEOS_TEMP_FOLDER))
+
+
 URL = args.url
 FRAME_QUALITY = args.frame_quality
 
 assert INPUT_FILE != None , "why u put no input file, that dum"
-    
+
 if len(args.output_file) >= 1:
     OUTPUT_FILE = args.output_file
 else:
@@ -89,7 +138,7 @@ else:
 
 TEMP_FOLDER = "TEMP"
 AUDIO_FADE_ENVELOPE_SIZE = 400 # smooth out transitiion's audio by quickly fading in/out (arbitrary magic number whatever)
-    
+
 createPath(TEMP_FOLDER)
 
 command = "ffmpeg -i "+INPUT_FILE+" -qscale:v "+str(FRAME_QUALITY)+" "+TEMP_FOLDER+"/frame%06d.jpg -hide_banner"
@@ -152,7 +201,7 @@ outputPointer = 0
 lastExistingFrame = None
 for chunk in chunks:
     audioChunk = audioData[int(chunk[0]*samplesPerFrame):int(chunk[1]*samplesPerFrame)]
-    
+
     sFile = TEMP_FOLDER+"/tempStart.wav"
     eFile = TEMP_FOLDER+"/tempEnd.wav"
     wavfile.write(sFile,SAMPLE_RATE,audioChunk)
@@ -168,7 +217,7 @@ for chunk in chunks:
     #outputAudioData[outputPointer:endPointer] = alteredAudioData/maxAudioVolume
 
     # smooth out transitiion's audio by quickly fading in/out
-    
+
     if leng < AUDIO_FADE_ENVELOPE_SIZE:
         outputAudioData[outputPointer:endPointer] = 0 # audio is less than 0.01 sec, let's just remove it.
     else:
@@ -201,4 +250,3 @@ command = "ffmpeg -framerate "+str(frameRate)+" -i "+TEMP_FOLDER+"/newFrame%06d.
 subprocess.call(command, shell=True)
 
 deletePath(TEMP_FOLDER)
-
