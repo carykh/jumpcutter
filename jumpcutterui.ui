@@ -1,0 +1,739 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>500</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <widget class="QLabel" name="InputFileText">
+   <property name="geometry">
+    <rect>
+     <x>100</x>
+     <y>27</y>
+     <width>91</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Input file location</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="InputFileDisplay">
+   <property name="geometry">
+    <rect>
+     <x>54</x>
+     <y>47</y>
+     <width>191</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: rgb(255, 255, 255);</string>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::Box</enum>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="InputButton">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>47</y>
+     <width>21</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="cursor">
+    <cursorShape>PointingHandCursor</cursorShape>
+   </property>
+   <property name="text">
+    <string>...</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="OutputLocationText">
+   <property name="geometry">
+    <rect>
+     <x>330</x>
+     <y>27</y>
+     <width>91</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Output file location</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="OutputFileDisplay">
+   <property name="geometry">
+    <rect>
+     <x>284</x>
+     <y>47</y>
+     <width>191</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: rgb(255, 255, 255);</string>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::Box</enum>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="OutputButton">
+   <property name="geometry">
+    <rect>
+     <x>260</x>
+     <y>47</y>
+     <width>21</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="cursor">
+    <cursorShape>PointingHandCursor</cursorShape>
+   </property>
+   <property name="text">
+    <string>...</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="OutputNameText">
+   <property name="geometry">
+    <rect>
+     <x>170</x>
+     <y>77</y>
+     <width>141</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>(Optional) Output file name</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="OutputNameEdit">
+   <property name="geometry">
+    <rect>
+     <x>92</x>
+     <y>97</y>
+     <width>301</width>
+     <height>20</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="ThresholdText">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>129</y>
+     <width>91</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Silent threshold</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="ThresholdEdit">
+   <property name="geometry">
+    <rect>
+     <x>55</x>
+     <y>149</y>
+     <width>41</width>
+     <height>20</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="SoundedText">
+   <property name="geometry">
+    <rect>
+     <x>155</x>
+     <y>129</y>
+     <width>91</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Sounded speed</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="SoundedEdit">
+   <property name="geometry">
+    <rect>
+     <x>180</x>
+     <y>149</y>
+     <width>41</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="SilentSpeedEdit">
+   <property name="geometry">
+    <rect>
+     <x>285</x>
+     <y>149</y>
+     <width>41</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="SilentSpeedText">
+   <property name="geometry">
+    <rect>
+     <x>260</x>
+     <y>129</y>
+     <width>91</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Silent speed</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="MarginEdit">
+   <property name="geometry">
+    <rect>
+     <x>395</x>
+     <y>149</y>
+     <width>41</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MarginText">
+   <property name="geometry">
+    <rect>
+     <x>370</x>
+     <y>129</y>
+     <width>91</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Frame margin</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="SampleInputText">
+   <property name="geometry">
+    <rect>
+     <x>45</x>
+     <y>219</y>
+     <width>91</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Input</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="SampleInputEdit">
+   <property name="geometry">
+    <rect>
+     <x>70</x>
+     <y>239</y>
+     <width>41</width>
+     <height>20</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="SampleOutputEdit">
+   <property name="geometry">
+    <rect>
+     <x>158</x>
+     <y>239</y>
+     <width>41</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="SampleOutputText">
+   <property name="geometry">
+    <rect>
+     <x>133</x>
+     <y>219</y>
+     <width>91</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Output</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="SampleText">
+   <property name="geometry">
+    <rect>
+     <x>90</x>
+     <y>199</y>
+     <width>91</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Sample rate</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="FrameRateText">
+   <property name="geometry">
+    <rect>
+     <x>320</x>
+     <y>199</y>
+     <width>91</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Frame rate</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="FrameRateOutputEdit">
+   <property name="geometry">
+    <rect>
+     <x>392</x>
+     <y>239</y>
+     <width>41</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="FrameRateInputEdit">
+   <property name="geometry">
+    <rect>
+     <x>295</x>
+     <y>239</y>
+     <width>41</width>
+     <height>20</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="FrameRateInputText">
+   <property name="geometry">
+    <rect>
+     <x>270</x>
+     <y>219</y>
+     <width>91</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Input</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="FrameRateOutputText">
+   <property name="geometry">
+    <rect>
+     <x>367</x>
+     <y>219</y>
+     <width>91</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Output</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="FrameQualityText">
+   <property name="geometry">
+    <rect>
+     <x>210</x>
+     <y>269</y>
+     <width>91</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Frame quality</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="FrameQualityBox">
+   <property name="geometry">
+    <rect>
+     <x>240</x>
+     <y>289</y>
+     <width>31</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <item>
+    <property name="text">
+     <string>1</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>2</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>3</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>4</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>5</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="Line" name="line">
+   <property name="geometry">
+    <rect>
+     <x>86</x>
+     <y>201</y>
+     <width>20</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+  </widget>
+  <widget class="Line" name="line_2">
+   <property name="geometry">
+    <rect>
+     <x>164</x>
+     <y>201</y>
+     <width>16</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+  </widget>
+  <widget class="Line" name="line_3">
+   <property name="geometry">
+    <rect>
+     <x>79</x>
+     <y>210</y>
+     <width>16</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Vertical</enum>
+   </property>
+  </widget>
+  <widget class="Line" name="line_4">
+   <property name="geometry">
+    <rect>
+     <x>173</x>
+     <y>210</y>
+     <width>16</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Vertical</enum>
+   </property>
+  </widget>
+  <widget class="QLabel" name="InputComment">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>329</y>
+     <width>451</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Input file location: The video file you want modified.</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="OutputLocationComment">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>349</y>
+     <width>451</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Output file location: Where you want the modified video to be.</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="OutputNameComment">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>369</y>
+     <width>451</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Output file name: Optional. if not included, it'll just modify the input file name</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="ThresholdComment1">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>389</y>
+     <width>451</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Silent threshold: The volume amount that frames' audio needs to surpass</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="ThresholdComment2">
+   <property name="geometry">
+    <rect>
+     <x>102</x>
+     <y>401</y>
+     <width>361</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>to be consider &quot;sounded&quot;. It ranges from 0 (silence) to 1 (max volume)</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="SoundedComment">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>425</y>
+     <width>451</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Sounded speed: The speed that sounded (spoken) frames should be played at. Typically 1.</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="SilentSpeedComment">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>449</y>
+     <width>451</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Silent speed: The speed that silent frames should be played at. 999999 For jumpcutting.</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MarginComment1">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>469</y>
+     <width>461</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Frame margin: Some silent frames adjacent to sounded frames are included to prodive context.</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MarginComment2">
+   <property name="geometry">
+    <rect>
+     <x>92</x>
+     <y>482</y>
+     <width>361</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>How many frames on either the side of speech should be included?</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="MarginComment3">
+   <property name="geometry">
+    <rect>
+     <x>92</x>
+     <y>497</y>
+     <width>361</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>That's this variable.</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="SampleComment">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>517</y>
+     <width>451</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Sample rate: Sample rate of the input and output videos</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="FrameRateComment">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>537</y>
+     <width>451</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Frame rate: Frame rate of the input and output videos. optional</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="FrameQualityComment">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>557</y>
+     <width>451</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Frame quality: Quality of frames to be extracted from input video. Range: (1-5), (3 default).</string>
+   </property>
+  </widget>
+  <widget class="Line" name="line_5">
+   <property name="geometry">
+    <rect>
+     <x>392</x>
+     <y>201</y>
+     <width>21</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+  </widget>
+  <widget class="Line" name="line_6">
+   <property name="geometry">
+    <rect>
+     <x>406</x>
+     <y>210</y>
+     <width>16</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Vertical</enum>
+   </property>
+  </widget>
+  <widget class="Line" name="line_7">
+   <property name="geometry">
+    <rect>
+     <x>309</x>
+     <y>209</y>
+     <width>16</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Vertical</enum>
+   </property>
+  </widget>
+  <widget class="Line" name="line_8">
+   <property name="geometry">
+    <rect>
+     <x>318</x>
+     <y>200</y>
+     <width>20</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="JumpCutButton">
+   <property name="geometry">
+    <rect>
+     <x>350</x>
+     <y>290</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Jump-cut</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
