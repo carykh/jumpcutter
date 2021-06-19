@@ -63,6 +63,7 @@ parser.add_argument('--frame_margin', type=float, default=1, help="some silent f
 parser.add_argument('--sample_rate', type=float, default=44100, help="sample rate of the input and output videos")
 parser.add_argument('--frame_rate', type=float, default=30, help="frame rate of the input and output videos. optional... I try to find it out myself, but it doesn't always work.")
 parser.add_argument('--frame_quality', type=int, default=3, help="quality of frames to be extracted from input video. 1 is highest, 31 is lowest, 3 is the default.")
+parser.add_argument('--audio_only', default=False, action='store_true', help="outputs an audio file")
 
 args = parser.parse_args()
 
@@ -72,6 +73,7 @@ frameRate = args.frame_rate
 SAMPLE_RATE = args.sample_rate
 SILENT_THRESHOLD = args.silent_threshold
 FRAME_SPREADAGE = args.frame_margin
+AUDIO_ONLY = args.audio_only
 NEW_SPEED = [args.silent_speed, args.sounded_speed]
 if args.url != None:
     INPUT_FILE = downloadFile(args.url)
@@ -92,8 +94,9 @@ AUDIO_FADE_ENVELOPE_SIZE = 400 # smooth out transitiion's audio by quickly fadin
     
 createPath(TEMP_FOLDER)
 
-command = "ffmpeg -i "+INPUT_FILE+" -qscale:v "+str(FRAME_QUALITY)+" "+TEMP_FOLDER+"/frame%06d.jpg -hide_banner"
-subprocess.call(command, shell=True)
+if not AUDIO_ONLY:
+    command = "ffmpeg -i "+INPUT_FILE+" -qscale:v "+str(FRAME_QUALITY)+" "+TEMP_FOLDER+"/frame%06d.jpg -hide_banner"
+    subprocess.call(command, shell=True)
 
 command = "ffmpeg -i "+INPUT_FILE+" -ab 160k -ac 2 -ar "+str(SAMPLE_RATE)+" -vn "+TEMP_FOLDER+"/audio.wav"
 
@@ -109,16 +112,19 @@ sampleRate, audioData = wavfile.read(TEMP_FOLDER+"/audio.wav")
 audioSampleCount = audioData.shape[0]
 maxAudioVolume = getMaxVolume(audioData)
 
-f = open(TEMP_FOLDER+"/params.txt", 'r+')
-pre_params = f.read()
-f.close()
-params = pre_params.split('\n')
-for line in params:
-    m = re.search('Stream #.*Video.* ([0-9]*) fps',line)
-    if m is not None:
-        frameRate = float(m.group(1))
-
-samplesPerFrame = sampleRate/frameRate
+if not AUDIO_ONLY:
+    f = open(TEMP_FOLDER+"/params.txt", 'r+')
+    pre_params = f.read()
+    f.close()
+    params = pre_params.split('\n')
+    for line in params:
+        m = re.search('Stream #.*Video.* ([0-9]*) fps',line)
+        if m is not None:
+            frameRate = float(m.group(1))
+            
+    samplesPerFrame = sampleRate/frameRate
+else:
+    samplesPerFrame = sampleRate
 
 audioFrameCount = int(math.ceil(audioSampleCount/samplesPerFrame))
 
@@ -176,16 +182,17 @@ for chunk in chunks:
         mask = np.repeat(premask[:, np.newaxis],2,axis=1) # make the fade-envelope mask stereo
         outputAudioData[outputPointer:outputPointer+AUDIO_FADE_ENVELOPE_SIZE] *= mask
         outputAudioData[endPointer-AUDIO_FADE_ENVELOPE_SIZE:endPointer] *= 1-mask
-
-    startOutputFrame = int(math.ceil(outputPointer/samplesPerFrame))
-    endOutputFrame = int(math.ceil(endPointer/samplesPerFrame))
-    for outputFrame in range(startOutputFrame, endOutputFrame):
-        inputFrame = int(chunk[0]+NEW_SPEED[int(chunk[2])]*(outputFrame-startOutputFrame))
-        didItWork = copyFrame(inputFrame,outputFrame)
-        if didItWork:
-            lastExistingFrame = inputFrame
-        else:
-            copyFrame(lastExistingFrame,outputFrame)
+        
+        if not AUDIO_ONLY:
+            startOutputFrame = int(math.ceil(outputPointer/samplesPerFrame))
+            endOutputFrame = int(math.ceil(endPointer/samplesPerFrame))
+            for outputFrame in range(startOutputFrame, endOutputFrame):
+                inputFrame = int(chunk[0]+NEW_SPEED[int(chunk[2])]*(outputFrame-startOutputFrame))
+                didItWork = copyFrame(inputFrame,outputFrame)
+                if didItWork:
+                    lastExistingFrame = inputFrame
+                else:
+                    copyFrame(lastExistingFrame,outputFrame)
 
     outputPointer = endPointer
 
@@ -196,9 +203,10 @@ outputFrame = math.ceil(outputPointer/samplesPerFrame)
 for endGap in range(outputFrame,audioFrameCount):
     copyFrame(int(audioSampleCount/samplesPerFrame)-1,endGap)
 '''
-
-command = "ffmpeg -framerate "+str(frameRate)+" -i "+TEMP_FOLDER+"/newFrame%06d.jpg -i "+TEMP_FOLDER+"/audioNew.wav -strict -2 "+OUTPUT_FILE
-subprocess.call(command, shell=True)
+if not AUDIO_ONLY:
+    command = "ffmpeg -framerate "+str(frameRate)+" -i "+TEMP_FOLDER+"/newFrame%06d.jpg -i "+TEMP_FOLDER+"/audioNew.wav -strict -2 "+OUTPUT_FILE
+    subprocess.call(command, shell=True)
+else:
+    copyfile(TEMP_FOLDER+"/audioNew.wav", OUTPUT_FILE)
 
 deletePath(TEMP_FOLDER)
-
