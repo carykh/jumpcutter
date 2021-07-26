@@ -13,10 +13,13 @@ import argparse
 from pytube import YouTube
 
 def downloadFile(url):
-    name = YouTube(url).streams.first().download()
-    newname = name.replace(' ','_')
-    os.rename(name,newname)
-    return newname
+    sep = os.path.sep
+    originalPath = YouTube(url).streams.first().download()
+    filepath = originalPath.split(sep)
+    filepath[-1] = filepath[-1].replace(' ','_')
+    filepath = sep.join(filepath)
+    os.rename(originalPath, filepath)
+    return filepath
 
 def getMaxVolume(s):
     maxv = float(np.max(s))
