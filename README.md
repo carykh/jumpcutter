@@ -23,3 +23,16 @@ recommended this to me. However, my pyinstaller build did not work. :( HELP
 
 ## Building with nix
 `nix-build` to get a script with all the libraries and ffmpeg, `nix-build -A bundle` to get a single binary.
+
+## Usage with Docker
+Build:
+```
+docker build . -t jumpcutter
+```
+Bind the directory to contain the videos to `/video`.
+
+Easiest example where `in.mp4` and `out.mp4` are both in your current directory:
+```
+docker run -v $(pwd):/video jumpcutter --input_file in.mp4 --output_file new.mp4
+```
+This will work on any operating system as long as docker is installed.
