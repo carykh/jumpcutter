@@ -61,7 +61,7 @@ parser.add_argument('--sounded_speed', type=float, default=1.00, help="the speed
 parser.add_argument('--silent_speed', type=float, default=5.00, help="the speed that silent frames should be played at. 999999 for jumpcutting.")
 parser.add_argument('--frame_margin', type=float, default=1, help="some silent frames adjacent to sounded frames are included to provide context. How many frames on either the side of speech should be included? That's this variable.")
 parser.add_argument('--sample_rate', type=float, default=44100, help="sample rate of the input and output videos")
-parser.add_argument('--frame_rate', type=float, default=30, help="frame rate of the input and output videos. optional... I try to find it out myself, but it doesn't always work.")
+parser.add_argument('--frame_rate', type=float, default=None, help="frame rate of the input and output videos. optional... I try to find it out myself, but it doesn't always work.")
 parser.add_argument('--frame_quality', type=int, default=3, help="quality of frames to be extracted from input video. 1 is highest, 31 is lowest, 3 is the default.")
 
 args = parser.parse_args()
@@ -81,6 +81,11 @@ URL = args.url
 FRAME_QUALITY = args.frame_quality
 
 assert INPUT_FILE != None , "why u put no input file, that dum"
+
+if frameRate == None:
+    c = subprocess.check_output("ffprobe -v 0 -of csv=p=0 -select_streams v:0 -show_entries stream=r_frame_rate {0}".format(INPUT_FILE), shell=True)
+    c = c.decode().strip().split("/")
+    frameRate = float(float(c[0])/float(c[1]))
     
 if len(args.output_file) >= 1:
     OUTPUT_FILE = args.output_file
