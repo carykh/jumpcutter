@@ -48,9 +48,9 @@ def createPath(s):
 def deletePath(s): # Dangerous! Watch out!
     try:  
         rmtree(s,ignore_errors=False)
-    except OSError:  
+    except OSError as error:
         print ("Deletion of the directory %s failed" % s)
-        print(OSError)
+        print(error)
 
 parser = argparse.ArgumentParser(description='Modifies a video file to play at different speeds when there is sound vs. silence.')
 parser.add_argument('--input_file', type=str,  help='the video file you want modified')
