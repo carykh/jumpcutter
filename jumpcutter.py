@@ -10,7 +10,11 @@ import math
 from shutil import copyfile, rmtree
 import os
 import argparse
-from pytube import YouTube
+try:
+    from pytube import YouTube
+except ImportError:
+    print('pytube is not installed.  Install if you would like to use the `--url` argument.')
+    YouTube = None
 
 def downloadFile(url):
     name = YouTube(url).streams.first().download()
@@ -73,14 +77,14 @@ SAMPLE_RATE = args.sample_rate
 SILENT_THRESHOLD = args.silent_threshold
 FRAME_SPREADAGE = args.frame_margin
 NEW_SPEED = [args.silent_speed, args.sounded_speed]
-if args.url != None:
+if args.url is not None and YouTube is not None:
     INPUT_FILE = downloadFile(args.url)
 else:
     INPUT_FILE = args.input_file
 URL = args.url
 FRAME_QUALITY = args.frame_quality
 
-assert INPUT_FILE != None , "why u put no input file, that dum"
+assert INPUT_FILE is not None, "why u put no input file, that dum"
     
 if len(args.output_file) >= 1:
     OUTPUT_FILE = args.output_file

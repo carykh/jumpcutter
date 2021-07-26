@@ -9,7 +9,7 @@ Since my GitHub is more like a dumping ground or personal journal, I'm not going
 
 It uses Python 3.
 
-It works on Ubuntu 16.04 and Windows 10. (It might work on other OSs too, we just haven't tested it yet.)
+It works on Ubuntu 16.04, Windows 10 & Mac. (It might work on other OSs too, we just haven't tested it yet.)
 
 This program relies heavily on ffmpeg. It will start subprocesses that call ffmpeg, so be aware of that!
 
