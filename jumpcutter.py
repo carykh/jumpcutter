@@ -72,15 +72,12 @@ SAMPLE_RATE = args.sample_rate
 SILENT_THRESHOLD = args.silent_threshold
 FRAME_SPREADAGE = args.frame_margin
 NEW_SPEED = [args.silent_speed, args.sounded_speed]
-if args.url != None:
-    INPUT_FILE = downloadFile(args.url)
-else:
-    INPUT_FILE = args.input_file
+INPUT_FILE = downloadFile(args.url) if args.url != None else args.input_file
 URL = args.url
 FRAME_QUALITY = args.frame_quality
 
 assert INPUT_FILE != None , "why u put no input file, that dum"
-    
+
 if len(args.output_file) >= 1:
     OUTPUT_FILE = args.output_file
 else:
@@ -88,7 +85,7 @@ else:
 
 TEMP_FOLDER = '/tmp/jumpcutter' if sys.platform=='linux' else "TEMP"
 AUDIO_FADE_ENVELOPE_SIZE = 400 # smooth out transitiion's audio by quickly fading in/out (arbitrary magic number whatever)
-    
+
 createPath(TEMP_FOLDER)
 
 
@@ -138,7 +135,7 @@ outputPointer = 0
 lastExistingFrame = None
 for chunk in chunks:
     audioChunk = audioData[int(chunk[0]*samplesPerFrame):int(chunk[1]*samplesPerFrame)]
-    
+
     sFile = TEMP_FOLDER+"/tempStart.wav"
     eFile = TEMP_FOLDER+"/tempEnd.wav"
     wavfile.write(sFile,SAMPLE_RATE,audioChunk)
@@ -154,7 +151,7 @@ for chunk in chunks:
     #outputAudioData[outputPointer:endPointer] = alteredAudioData/maxAudioVolume
 
     # smooth out transitiion's audio by quickly fading in/out
-    
+
     if leng < AUDIO_FADE_ENVELOPE_SIZE:
         outputAudioData[outputPointer:endPointer] = 0 # audio is less than 0.01 sec, let's just remove it.
     else:
