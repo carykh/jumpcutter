@@ -1,14 +1,13 @@
 from contextlib import closing
 from PIL import Image
-import subprocess
+import ffmpeg
 from audiotsm import phasevocoder
 from audiotsm.io.wav import WavReader, WavWriter
 from scipy.io import wavfile
 import numpy as np
-import re
-import math
+import re, math
 from shutil import copyfile, rmtree
-import os
+import os, sys
 import argparse
 from pytube import YouTube
 
@@ -30,7 +29,7 @@ def copyFrame(inputFrame,outputFrame):
         return False
     copyfile(src, dst)
     if outputFrame%20 == 19:
-        print(str(outputFrame+1)+" time-altered frames saved.")
+        print(str(outputFrame+1)+" time-altered frames saved.", end='\r')
     return True
 
 def inputToOutputFilename(filename):
@@ -43,7 +42,7 @@ def createPath(s):
     try:  
         os.mkdir(s)
     except OSError:  
-        assert False, "Creation of the directory %s failed. (The TEMP folder may already exist. Delete or rename it, and try again.)"
+        raise FileExistsError("Creation of the directory %s failed. (The TEMP folder may already exist. Delete or rename it, and try again.) (If the jumpcutter failed, the folder probably still exists, so remove it manually)"%repr(s))
 
 def deletePath(s): # Dangerous! Watch out!
     try:  
@@ -73,58 +72,42 @@ SAMPLE_RATE = args.sample_rate
 SILENT_THRESHOLD = args.silent_threshold
 FRAME_SPREADAGE = args.frame_margin
 NEW_SPEED = [args.silent_speed, args.sounded_speed]
-if args.url != None:
-    INPUT_FILE = downloadFile(args.url)
-else:
-    INPUT_FILE = args.input_file
+INPUT_FILE = downloadFile(args.url) if args.url != None else args.input_file
 URL = args.url
 FRAME_QUALITY = args.frame_quality
 
 assert INPUT_FILE != None , "why u put no input file, that dum"
-    
+
 if len(args.output_file) >= 1:
     OUTPUT_FILE = args.output_file
 else:
     OUTPUT_FILE = inputToOutputFilename(INPUT_FILE)
 
-TEMP_FOLDER = "TEMP"
+TEMP_FOLDER = '/tmp/jumpcutter' if sys.platform=='linux' else "TEMP"
 AUDIO_FADE_ENVELOPE_SIZE = 400 # smooth out transitiion's audio by quickly fading in/out (arbitrary magic number whatever)
-    
+
 createPath(TEMP_FOLDER)
 
-command = "ffmpeg -i "+INPUT_FILE+" -qscale:v "+str(FRAME_QUALITY)+" "+TEMP_FOLDER+"/frame%06d.jpg -hide_banner"
-subprocess.call(command, shell=True)
 
-command = "ffmpeg -i "+INPUT_FILE+" -ab 160k -ac 2 -ar "+str(SAMPLE_RATE)+" -vn "+TEMP_FOLDER+"/audio.wav"
+print('Importing the footage...')
+V=ffmpeg.input(INPUT_FILE).output(TEMP_FOLDER+"/audio.wav", **{'loglevel':'warning'}).run_async()
+ffmpeg.input(INPUT_FILE).output(TEMP_FOLDER+"/frame%06d.jpg", **{'qscale:v': FRAME_QUALITY,'loglevel':'warning', 'stats':'-hide_banner'}).run()
+print('Image import finished...')
 
-subprocess.call(command, shell=True)
+probe = ffmpeg.probe(INPUT_FILE)
+video_info = next(x for x in probe['streams'] if x['codec_type'] == 'video')
+frameRate = int(video_info['r_frame_rate'].split('/')[0])/int(video_info['r_frame_rate'].split('/')[1])
 
-command = "ffmpeg -i "+TEMP_FOLDER+"/input.mp4 2>&1"
-f = open(TEMP_FOLDER+"/params.txt", "w")
-subprocess.call(command, shell=True, stdout=f)
-
-
+V.wait()
+print('Footage imported')
 
 sampleRate, audioData = wavfile.read(TEMP_FOLDER+"/audio.wav")
+
 audioSampleCount = audioData.shape[0]
 maxAudioVolume = getMaxVolume(audioData)
-
-f = open(TEMP_FOLDER+"/params.txt", 'r+')
-pre_params = f.read()
-f.close()
-params = pre_params.split('\n')
-for line in params:
-    m = re.search('Stream #.*Video.* ([0-9]*) fps',line)
-    if m is not None:
-        frameRate = float(m.group(1))
-
 samplesPerFrame = sampleRate/frameRate
-
 audioFrameCount = int(math.ceil(audioSampleCount/samplesPerFrame))
-
 hasLoudAudio = np.zeros((audioFrameCount))
-
-
 
 for i in range(audioFrameCount):
     start = int(i*samplesPerFrame)
@@ -152,7 +135,7 @@ outputPointer = 0
 lastExistingFrame = None
 for chunk in chunks:
     audioChunk = audioData[int(chunk[0]*samplesPerFrame):int(chunk[1]*samplesPerFrame)]
-    
+
     sFile = TEMP_FOLDER+"/tempStart.wav"
     eFile = TEMP_FOLDER+"/tempEnd.wav"
     wavfile.write(sFile,SAMPLE_RATE,audioChunk)
@@ -168,7 +151,7 @@ for chunk in chunks:
     #outputAudioData[outputPointer:endPointer] = alteredAudioData/maxAudioVolume
 
     # smooth out transitiion's audio by quickly fading in/out
-    
+
     if leng < AUDIO_FADE_ENVELOPE_SIZE:
         outputAudioData[outputPointer:endPointer] = 0 # audio is less than 0.01 sec, let's just remove it.
     else:
@@ -197,8 +180,13 @@ for endGap in range(outputFrame,audioFrameCount):
     copyFrame(int(audioSampleCount/samplesPerFrame)-1,endGap)
 '''
 
-command = "ffmpeg -framerate "+str(frameRate)+" -i "+TEMP_FOLDER+"/newFrame%06d.jpg -i "+TEMP_FOLDER+"/audioNew.wav -strict -2 "+OUTPUT_FILE
-subprocess.call(command, shell=True)
+print('\nExporting the footage...')
+video = ffmpeg.input(TEMP_FOLDER+"/newFrame*.jpg", pattern_type='glob', framerate=frameRate)
+audio = ffmpeg.input(TEMP_FOLDER+"/audioNew.wav")
+out = ffmpeg.output(video, audio, OUTPUT_FILE, framerate=frameRate, **{'loglevel':'warning'})
+out.run(quiet=0)
 
+print('Clean-up...')
 deletePath(TEMP_FOLDER)
+print('Finished!')
 
