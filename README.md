@@ -34,14 +34,11 @@ If you locate your PyCharm folder, you should be able to locate the batch file i
 
 ## Temp Limitiations
 
-Things have been thrown together a bit hastily.  A couple of limitations
+There is currently one limitation... 
 
-* Filenames need to contain no spaces at the moment (including the path).  
-* The URL downloading doesn't appear to work, or it didn't the first time I tried it
+* The URL downloading doesn't appear to work, or it didn't the first time I tried it.
 
-I'll get to these eventually.  The GUI was put together go I could easily process my YouTube videos.  I processed my entire PySimpleGUI 2020 Playlist and have been updating the videos, adding them to this new playlist:
-
-https://www.youtube.com/playlist?list=PLl8dD0doyrvF1nLakJJ7sl8OX2YSHclqn
+It's next on the list to deal with.
 
 ## Incredible Tool!!
 
@@ -49,6 +46,31 @@ OK, so the reason this tool has a GUI added is that it's a miraculous tool in my
 
 Hopefully your videos will get the same kind of benefits mine did.  
 
+## Side By Side Examples
+
+I am so enamored by this tool that I processed my entire 18 part series of PySimpleGUI lessons.
+
+Here is the original playlist:
+
+https://www.youtube.com/playlist?list=PLl8dD0doyrvFfzzniWS7FXrZefWWExJ2e
+
+
+And here is a new playlist with all of the videos modified:
+
+https://www.youtube.com/playlist?list=PLl8dD0doyrvF1nLakJJ7sl8OX2YSHclqn
+
+
+I don't have a total amount of time saved, but I can tell you that each video is 17-20% shorter.  That's quite a bit of a difference!  Not only are they shorter, but they "feel tighter".  I appear to have my act together when in fact I'm fumbling around trying to type with as few errors as possible, with the keyboard being obscured by my microphone.
+
+## Future Test
+
+I'm going to make an experimental "typical how-to video" to show the potential power of this tool.  The idea is to be as fumbling and lost as possible and see if the tool will correct things to be much more direct and to the point.
+
+## Attention Video Creators...
+
+If you're a video creator, it's really easy to use this tool.  YouTube provides you a link to download your video.  You can then run the video through this tool, using the GUI, and upload the new video as a new YouTube video.
+
+If you have good results using the tool, I would love to hear from you.  Please open an Issue on this GitHub and post somelinks. This will give visiblity to other users of your results.
 
 The remainder of the readme is from Cary's original repo:
 ------------------------------------
