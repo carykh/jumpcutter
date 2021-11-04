@@ -1,5 +1,1 @@
-Pillow
-audiotsm
-scipy
-numpy
-pytube
+rocket!!
