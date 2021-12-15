@@ -11,6 +11,11 @@ from shutil import copyfile, rmtree
 import os
 import argparse
 from pytube import YouTube
+import string
+import random
+
+def id_generator(size=6, chars=string.ascii_lowercase + string.digits):
+    return ''.join(random.choice(chars) for _ in range(size))
 
 def downloadFile(url):
     name = YouTube(url).streams.first().download()
@@ -87,7 +92,7 @@ if len(args.output_file) >= 1:
 else:
     OUTPUT_FILE = inputToOutputFilename(INPUT_FILE)
 
-TEMP_FOLDER = "TEMP"
+TEMP_FOLDER = "TEMP_" + id_generator()
 AUDIO_FADE_ENVELOPE_SIZE = 400 # smooth out transitiion's audio by quickly fading in/out (arbitrary magic number whatever)
     
 createPath(TEMP_FOLDER)
