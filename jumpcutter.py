@@ -11,6 +11,9 @@ from shutil import copyfile, rmtree
 import os
 import argparse
 from pytube import YouTube
+import PySimpleGUI as sg
+
+
 
 def downloadFile(url):
     name = YouTube(url).streams.first().download()
@@ -39,18 +42,20 @@ def inputToOutputFilename(filename):
 
 def createPath(s):
     #assert (not os.path.exists(s)), "The filepath "+s+" already exists. Don't want to overwrite it. Aborting."
-
-    try:  
+    deletePath(s)
+    try:
         os.mkdir(s)
     except OSError:  
         assert False, "Creation of the directory %s failed. (The TEMP folder may already exist. Delete or rename it, and try again.)"
 
 def deletePath(s): # Dangerous! Watch out!
-    try:  
+    try:
         rmtree(s,ignore_errors=False)
     except OSError:  
         print ("Deletion of the directory %s failed" % s)
         print(OSError)
+
+
 
 parser = argparse.ArgumentParser(description='Modifies a video file to play at different speeds when there is sound vs. silence.')
 parser.add_argument('--input_file', type=str,  help='the video file you want modified')
@@ -60,7 +65,7 @@ parser.add_argument('--silent_threshold', type=float, default=0.03, help="the vo
 parser.add_argument('--sounded_speed', type=float, default=1.00, help="the speed that sounded (spoken) frames should be played at. Typically 1.")
 parser.add_argument('--silent_speed', type=float, default=5.00, help="the speed that silent frames should be played at. 999999 for jumpcutting.")
 parser.add_argument('--frame_margin', type=float, default=1, help="some silent frames adjacent to sounded frames are included to provide context. How many frames on either the side of speech should be included? That's this variable.")
-parser.add_argument('--sample_rate', type=float, default=44100, help="sample rate of the input and output videos")
+parser.add_argument('--sample_rate', type=int, default=44100, help="sample rate of the input and output videos")
 parser.add_argument('--frame_rate', type=float, default=30, help="frame rate of the input and output videos. optional... I try to find it out myself, but it doesn't always work.")
 parser.add_argument('--frame_quality', type=int, default=3, help="quality of frames to be extracted from input video. 1 is highest, 31 is lowest, 3 is the default.")
 
@@ -77,6 +82,7 @@ if args.url != None:
     INPUT_FILE = downloadFile(args.url)
 else:
     INPUT_FILE = args.input_file
+
 URL = args.url
 FRAME_QUALITY = args.frame_quality
 
@@ -89,13 +95,13 @@ else:
 
 TEMP_FOLDER = "TEMP"
 AUDIO_FADE_ENVELOPE_SIZE = 400 # smooth out transitiion's audio by quickly fading in/out (arbitrary magic number whatever)
-    
+
 createPath(TEMP_FOLDER)
 
-command = "ffmpeg -i "+INPUT_FILE+" -qscale:v "+str(FRAME_QUALITY)+" "+TEMP_FOLDER+"/frame%06d.jpg -hide_banner"
+command = "ffmpeg -i \""+INPUT_FILE+"\" -qscale:v "+str(FRAME_QUALITY)+" "+TEMP_FOLDER+"/frame%06d.jpg -hide_banner"
 subprocess.call(command, shell=True)
 
-command = "ffmpeg -i "+INPUT_FILE+" -ab 160k -ac 2 -ar "+str(SAMPLE_RATE)+" -vn "+TEMP_FOLDER+"/audio.wav"
+command = "ffmpeg -i \""+INPUT_FILE+"\" -ab 160k -ac 2 -ar "+str(SAMPLE_RATE)+" -vn "+TEMP_FOLDER+"/audio.wav"
 
 subprocess.call(command, shell=True)
 
@@ -197,7 +203,7 @@ for endGap in range(outputFrame,audioFrameCount):
     copyFrame(int(audioSampleCount/samplesPerFrame)-1,endGap)
 '''
 
-command = "ffmpeg -framerate "+str(frameRate)+" -i "+TEMP_FOLDER+"/newFrame%06d.jpg -i "+TEMP_FOLDER+"/audioNew.wav -strict -2 "+OUTPUT_FILE
+command = "ffmpeg -framerate "+str(frameRate)+" -i "+TEMP_FOLDER+"/newFrame%06d.jpg -i "+TEMP_FOLDER+"/audioNew.wav -strict -2 \""+OUTPUT_FILE+"\""
 subprocess.call(command, shell=True)
 
 deletePath(TEMP_FOLDER)
