@@ -41,8 +41,7 @@ def createPath(s):
     #assert (not os.path.exists(s)), "The filepath "+s+" already exists. Don't want to overwrite it. Aborting."
 
     try:
-        if not os.path.exists(s):
-            os.mkdir(s)
+        os.mkdir(s)
     except OSError:
         assert False, "Creation of the directory %s failed. (The TEMP folder may already exist. Delete or rename it, and try again.)"
 
