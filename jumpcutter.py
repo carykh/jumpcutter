@@ -1,5 +1,3 @@
-from contextlib import closing
-from PIL import Image
 import subprocess
 from audiotsm import phasevocoder
 from audiotsm.io.wav import WavReader, WavWriter
@@ -80,7 +78,7 @@ else:
 URL = args.url
 FRAME_QUALITY = args.frame_quality
 
-assert INPUT_FILE != None , "why u put no input file, that dum"
+assert INPUT_FILE != None , "No input file specified. Use --input_file to specify the input video file."
     
 if len(args.output_file) >= 1:
     OUTPUT_FILE = args.output_file
@@ -201,4 +199,3 @@ command = "ffmpeg -framerate "+str(frameRate)+" -i "+TEMP_FOLDER+"/newFrame%06d.
 subprocess.call(command, shell=True)
 
 deletePath(TEMP_FOLDER)
-
